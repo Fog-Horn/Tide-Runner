@@ -147,6 +147,15 @@
   .course canvas{display:block;width:100%;height:auto;margin-bottom:7px}
   .course h3{margin:0;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;letter-spacing:.02em}
   .course p{margin:3px 0 0;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(234,247,244,.5)}
+  .course.hidden{display:none}
+
+  .more{
+    width:100%;margin-top:8px;padding:9px;font:inherit;font-size:9.5px;letter-spacing:.22em;
+    text-transform:uppercase;color:rgba(127,233,216,.72);background:rgba(127,233,216,.04);
+    border:1px solid var(--hair);cursor:pointer;transition:background .15s
+  }
+  .more:hover{background:rgba(127,233,216,.1)}
+  .more:focus-visible{outline:1px solid var(--chart);outline-offset:2px}
 
   .row{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;margin-top:16px}
   .seg{display:flex;border:1px solid var(--hair)}
@@ -244,7 +253,7 @@
   }
   @media (prefers-reduced-motion:reduce){
     #warn.on{animation:none}
-    .go-btn,.course{transition:none}
+    .go-btn,.course,.more{transition:none}
   }
 </style>
 </head>
@@ -301,6 +310,7 @@
 
     <p class="label">Course</p>
     <div class="courses" id="courses"></div>
+    <button class="more" id="more" aria-expanded="false"></button>
 
     <div class="row">
       <div>
@@ -383,7 +393,31 @@ const COURSES = [
 
   { name:'Fjord Run', desc:'Open water · flat out', width:150, cps:[
     [500,900],[560,620],[820,470],[1300,430],[1800,470],[2080,620],
-    [2140,900],[2060,1180],[1780,1330],[1300,1380],[820,1330],[560,1180]]}
+    [2140,900],[2060,1180],[1780,1330],[1300,1380],[820,1330],[560,1180]]},
+
+  /* Later additions — three generated, two hand-drawn, so this block mixes both
+     forms. All five are held to the same limits as the courses above: no corner
+     tighter than the hull turns, no two reaches closer than a channel width. */
+  { name:'Severn Bore', desc:'Tidal · surging', width:158,
+    gen:{cx:1300,cy:950,R:600,ax:1.30,ay:0.98,k:4,amp:.185,k2:8,amp2:.04,phase:.35,count:22}},
+
+  { name:'Reedham Weave', desc:'Reedy · relentless', width:130,
+    gen:{cx:1300,cy:950,R:555,ax:1.18,ay:1.08,k:7,amp:.118,k2:5,amp2:.032,phase:1.9,count:28}},
+
+  { name:'Atlantic Leg', desc:'Long swell · exposed', width:162,
+    gen:{cx:1300,cy:950,R:625,ax:1.42,ay:0.90,k:2,amp:.20,k2:5,amp2:.035,phase:.9,count:20}},
+
+  { name:'Skerry Passage', desc:'Rocks · blind bends', width:126, cps:[
+    [560,980],[620,720],[820,560],[1080,520],[1280,620],
+    [1420,780],[1620,830],[1800,740],[1990,800],[2090,990],
+    [2040,1210],[1860,1330],[1650,1300],[1480,1360],
+    [1270,1430],[1050,1440],[840,1370],[640,1220]]},
+
+  { name:'Pool of London', desc:'City · stone quays', width:132, harbour:true, cps:[
+    [600,700],[900,600],[1240,580],[1560,620],[1820,730],
+    [1980,930],[1940,1160],[1760,1300],[1520,1330],
+    [1300,1240],[1120,1280],[1000,1440],[760,1460],
+    [580,1320],[520,1080],[540,860]]}
 ];
 
 const SAMPLES = 15;      // centreline points per control segment
@@ -1997,9 +2031,27 @@ TRACKS.forEach((t,i)=>{
     courseIdx=i; plotFit=null; track=TRACKS[i]; track._path=null; spawnFauna(); spawnBoosts(); spawnMoored();
     coursesEl.querySelectorAll('.course').forEach(n=>n.classList.remove('sel'));
     el.classList.add('sel');
+    syncCourses();
   };
   coursesEl.appendChild(el);
 });
+
+/* The menu leads with a few courses and keeps the rest behind a toggle, so the
+   sheet doesn't open as a wall of thumbnails. */
+const SHOWN = 5;
+const moreEl = document.getElementById('more');
+let expanded = false;
+
+function syncCourses(){
+  coursesEl.querySelectorAll('.course').forEach((el,i)=>{
+    // a course picked out of the full list stays on show once it collapses again
+    el.classList.toggle('hidden', !expanded && i>=SHOWN && i!==courseIdx);
+  });
+  moreEl.textContent = expanded ? 'Fewer courses' : 'More courses · ' + (TRACKS.length-SHOWN);
+  moreEl.setAttribute('aria-expanded', expanded);
+}
+moreEl.onclick = () => { expanded = !expanded; syncCourses(); };
+syncCourses();
 
 function segment(id, attr, set){
   const wrap=document.getElementById(id);

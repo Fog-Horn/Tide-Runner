@@ -11,9 +11,12 @@ dependencies beyond a webfont.
 
 ## Racing
 
-- **Six courses** — Ouse Bends, Kingfisher Cut, Delta Run, Monaco Harbour, Amsterdam Cut
-  and Fjord Run, each with its own channel width and character, from wide meanders to
-  technical hairpins.
+- **Eleven courses**, each with its own channel width and character, from wide meanders to
+  technical hairpins. The menu leads with five and keeps the rest behind **More courses**;
+  a course picked from the full list stays on show when the list collapses again.
+  Generated meanders: Ouse Bends, Kingfisher Cut, Delta Run, Severn Bore, Reedham Weave and
+  Atlantic Leg. Hand-drawn: Monaco Harbour, Amsterdam Cut, Fjord Run, Skerry Passage and
+  Pool of London.
 - **2, 3 or 5 laps** against three rivals (Sea Fret, Bramble and Mad Mackerel) at one of
   four skill tiers — Novice, Club, Regatta and Offshore — which scale rival power, braking
   discipline, apex commitment and how readily they go for boosts.
@@ -85,3 +88,9 @@ ios/                  Capacitor iOS project
 Inside `web/index.html` the code is grouped into commented sections: course definitions and
 track generation, boat physics and AI, audio, fauna, boosts, moored scenery, rendering, the
 chartplotter, and the HUD and menu screens.
+
+Courses are either generated — a closed loop with sinusoidal meanders laid over it — or laid
+out by hand as control points. Hand-drawn courses have two limits to respect: no corner
+tighter than the hull can turn, and no two reaches closer together than a channel width, or
+they merge into one pool. Existing courses bottom out around a 65px corner radius and 1.6x
+channel width of separation.
