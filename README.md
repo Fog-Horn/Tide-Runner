@@ -12,7 +12,8 @@ dependencies beyond a webfont.
 ## Racing
 
 - **Eleven courses**, each with its own channel width and character, from wide meanders to
-  technical hairpins. The menu leads with five and keeps the rest behind **More courses**;
+  technical hairpins. The menu leads with six — two full rows — and keeps the rest behind
+  **More courses**;
   a course picked from the full list stays on show when the list collapses again.
   Generated meanders: Ouse Bends, Kingfisher Cut, Delta Run, Severn Bore, Reedham Weave and
   Atlantic Leg. Hand-drawn: Monaco Harbour, Amsterdam Cut, Fjord Run, Skerry Passage and
