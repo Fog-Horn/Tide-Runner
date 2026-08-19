@@ -13,14 +13,23 @@ dependencies beyond a webfont.
 
 - **Eleven courses**, each with its own channel width and character, from wide meanders to
   technical hairpins. The menu leads with six — two full rows — and keeps the rest behind
-  **More courses**;
-  a course picked from the full list stays on show when the list collapses again.
+  **More courses**; a course picked from the full list stays on show when the list
+  collapses again.
   Generated meanders: Ouse Bends, Kingfisher Cut, Delta Run, Severn Bore, Reedham Weave and
   Atlantic Leg. Hand-drawn: Monaco Harbour, Amsterdam Cut, Fjord Run, Skerry Passage and
   Pool of London.
 - **2, 3 or 5 laps** against three rivals (Sea Fret, Bramble and Mad Mackerel) at one of
-  four skill tiers — Novice, Club, Regatta and Offshore — which scale rival power, braking
-  discipline, apex commitment and how readily they go for boosts.
+  four skill tiers — Easy, Normal, Hard and Insane. The tiers are mostly driving skill
+  rather than horsepower: they scale how much of the theoretical corner speed a rival will
+  use, how much of the river it takes to straighten a bend, how steady it holds its line,
+  how fast it moves the helm, and whether it checks for clear water before grabbing a boost.
+  From Normal upward they also race each other — tucking into the wake ahead for the tow,
+  then pulling out to pass once there's clear water and the speed to use it.
+
+  Roughly what each tier laps Ouse Bends in: Easy ~35s, Normal ~28s, Hard ~24s, Insane ~22s.
+  For scale, the Insane driving line on the player's own engine laps it in ~23.5s — so
+  beating Insane means driving a near-perfect line *and* using the boosts and slipstream
+  it leaves on the table.
 - **Momentum-based handling.** The hull carries its speed through a turn, so ease off before
   the mark and let the stern come round. Astern is available but slow.
 - **Slipstream.** Sitting close behind another boat and roughly in line with it pulls you

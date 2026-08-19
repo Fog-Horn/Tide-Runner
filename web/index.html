@@ -322,7 +322,7 @@
       <div>
         <p class="label">Rivals</p>
         <div class="seg" id="skill">
-          <button data-s="0">Novice</button><button data-s="1" class="sel">Club</button><button data-s="2">Regatta</button><button data-s="3">Offshore</button>
+          <button data-s="0">Easy</button><button data-s="1" class="sel">Normal</button><button data-s="2">Hard</button><button data-s="3">Insane</button>
         </div>
       </div>
       <button class="go-btn" id="start">Start race</button>
@@ -542,12 +542,17 @@ const RIVALS = [
    react   — how quickly they move the helm
    boostIQ — whether they check there's clear water before taking a boost
              (you can't brake out of a boost, so grabbing one before a
-              bend is exactly how a bad driver ends up in the sand) */
+              bend is exactly how a bad driver ends up in the sand)
+   draft   — whether they'll tuck into the wake ahead to be towed along
+   pass    — whether they'll pull out of that wake and make the move
+   Easy and Normal leave horsepower on the table; Insane is quick mostly
+   because it corners near the limit and uses traffic, not because of the
+   engine. */
 const TIERS = [
-  {name:'Novice',   power:.74, safety:.72, apex:.06, noise:.20, react:5.0,  boostIQ:.15},
-  {name:'Club',     power:.86, safety:.84, apex:.12, noise:.12, react:7.0,  boostIQ:.50},
-  {name:'Regatta',  power:.97, safety:.93, apex:.18, noise:.06, react:9.5,  boostIQ:.80},
-  {name:'Offshore', power:1.07,safety:1.00,apex:.22, noise:.03, react:13.0, boostIQ:.95}
+  {name:'Easy',   power:.70, safety:.66, apex:.05, noise:.26, react:4.2,  boostIQ:.10, draft:0,   pass:0},
+  {name:'Normal', power:.86, safety:.85, apex:.13, noise:.11, react:7.5,  boostIQ:.55, draft:.35, pass:.25},
+  {name:'Hard',   power:1.00,safety:.98, apex:.19, noise:.05, react:10.5, boostIQ:.85, draft:.70, pass:.55},
+  {name:'Insane', power:1.10,safety:1.20,apex:.26, noise:.015,react:15.0, boostIQ:1.0, draft:1.0, pass:.90}
 ];
 const OMEGA = 1.25, DECEL = 250, LANE_MAX = 0.50;
 const tightness = r => r>=1100 ? 0 : Math.min(1,(1100-r)/800);
@@ -998,6 +1003,30 @@ function autopilot(b, dt){
       if(gap<=40 || gap>=430) continue;
       if(Math.abs(bo.lane-lane) > 0.75) continue;
       if(clear || Math.random() > T.boostIQ){ lane = bo.lane; break; }
+    }
+    // ---- racecraft: sit in the wake to be towed up to the boat ahead, then
+    //      pull out to the roomier side to make the pass. Lower tiers do
+    //      neither and simply queue up behind whatever is in front. ----
+    if(T.draft > 0){
+      let gap = 1e9, ahead = null;
+      for(const o of boats){
+        if(o===b || o.eaten>0) continue;
+        let g = o.idx - b.idx;
+        if(g < -n/2) g += n; else if(g > n/2) g -= n;
+        const m = g*sp;
+        if(m > 0 && m < 190 && m < gap){ gap = m; ahead = o; }
+      }
+      if(ahead){
+        const op = track.pts[ahead.idx], on = track.nrm[ahead.idx];
+        const oLane = ((ahead.x-op.x)*on.x + (ahead.y-op.y)*on.y)/track.half;
+        // only commit to the move with clear water ahead and the speed to use
+        // it — pulling out of the wake mid-bend just loses the tow and the corner
+        const quicker = spd > Math.hypot(ahead.vx, ahead.vy) + 4;
+        lane += (gap <= 62 && clear && quicker)
+          ? ((oLane > 0 ? -LANE_MAX : LANE_MAX) - lane)*T.pass   // out and past
+          : (oLane - lane)*T.draft*(1-tightness(track.R[b.idx]));  // sit in the tow,
+                                       // but only where following costs no apex
+      }
     }
     lane = Math.max(-LANE_MAX, Math.min(LANE_MAX, lane));
   }
