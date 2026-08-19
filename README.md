@@ -41,9 +41,14 @@ dependencies beyond a webfont.
 - **Wildlife and scenery** — whales, rays, sharks and shoals of fish move through the
   channel, and moored yachts with cheering crews line the banks.
 
-The HUD shows lap, position, elapsed time, last and best lap splits, speed in knots, and a
-chartplotter mini-map of the course and the boats on it. Results are per-session; nothing
-is written to disk.
+The HUD keeps the instruments in one row along the top — lap, position, speed in knots and
+elapsed time with last lap, session best and course record — leaving the chartplotter the
+top-right corner and the bottom of the screen clear for the touch controls.
+
+**Course records** are saved per course and survive a reload, shown on the menu tile and in
+the HUD while you race. They live in `localStorage` under `tiderunner.records.v1`; storage
+that refuses to answer (private windows, sandboxed frames) is handled, and records simply
+stop persisting beyond the session rather than breaking the game.
 
 ## Controls
 

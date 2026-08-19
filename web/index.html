@@ -52,29 +52,30 @@
   #hud{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .35s}
   #hud.on{opacity:1}
 
-  .hud-tl{position:absolute;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));display:flex;gap:6px}
+  /* one instrument row along the top: lap, place, speed, elapsed */
+  .hud-tl{position:absolute;top:calc(10px + env(safe-area-inset-top));left:calc(10px + env(safe-area-inset-left));display:flex;gap:6px;align-items:stretch}
   .stat{padding:6px 11px 7px;min-width:66px}
   .stat b{display:block;font-family:var(--display);font-weight:700;font-size:27px;line-height:.92;letter-spacing:.01em}
   .stat b small{font-size:14px;opacity:.5;font-weight:600}
 
-  .hud-tr{position:absolute;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));padding:7px 12px 8px;text-align:right;min-width:132px}
+  .stat.speed{width:108px}
+  .kn{display:flex;align-items:baseline;gap:5px}
+  .kn b{font-family:var(--display);font-weight:700;font-size:27px;line-height:.92}
+  .kn span{font-size:10px;letter-spacing:.16em;color:rgba(234,247,244,.55)}
+  .bar{margin-top:6px;height:4px;background:rgba(127,233,216,.14);overflow:hidden}
+  .bar i{display:block;height:100%;width:0%;background:var(--chart);transition:width .07s linear}
+  .bar.hot i{background:var(--amber)}
+
+  .stat.time{min-width:120px}
   .clock{font-family:var(--mono);font-weight:600;font-size:23px;line-height:1.05;letter-spacing:-.01em}
   .splits{margin-top:4px;font-size:10.5px;line-height:1.5;color:rgba(234,247,244,.62)}
   .splits i{font-style:normal;color:var(--chart)}
   .splits .best i{color:var(--amber)}
+  .splits .rec i{color:var(--amber)}
 
-  /* speed */
-  .hud-bl{position:absolute;left:calc(10px + env(safe-area-inset-left));bottom:calc(10px + env(safe-area-inset-bottom));padding:8px 12px 9px;width:150px}
-  .kn{display:flex;align-items:baseline;gap:5px}
-  .kn b{font-family:var(--display);font-weight:700;font-size:34px;line-height:.85}
-  .kn span{font-size:10px;letter-spacing:.16em;color:rgba(234,247,244,.55)}
-  .bar{margin-top:7px;height:4px;background:rgba(127,233,216,.14);overflow:hidden}
-  .bar i{display:block;height:100%;width:0%;background:var(--chart);transition:width .07s linear}
-  .bar.hot i{background:var(--amber)}
-
-  /* chartplotter */
-  .hud-br{position:absolute;right:calc(10px + env(safe-area-inset-right));bottom:calc(10px + env(safe-area-inset-bottom));padding:8px 8px 6px}
-  .hud-br .eyebrow{display:flex;justify-content:space-between;gap:14px;margin-bottom:6px;padding:0 2px}
+  /* chartplotter has the top-right corner to itself */
+  .hud-tr{position:absolute;top:calc(10px + env(safe-area-inset-top));right:calc(10px + env(safe-area-inset-right));padding:8px 8px 6px}
+  .hud-tr .eyebrow{display:block;margin-bottom:6px;padding:0 2px}
   #plot{display:block;width:132px;height:132px}
 
   /* centre callouts */
@@ -147,6 +148,7 @@
   .course canvas{display:block;width:100%;height:auto;margin-bottom:7px}
   .course h3{margin:0;font-family:var(--display);font-weight:600;font-size:19px;line-height:1;letter-spacing:.02em}
   .course p{margin:3px 0 0;font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(234,247,244,.5)}
+  .course .tilerec{margin:3px 0 0;color:var(--amber);opacity:.85;min-height:12px}
   .course.hidden{display:none}
 
   .more{
@@ -202,7 +204,7 @@
   #touch{position:fixed;inset:0;z-index:4;display:none;pointer-events:none}
   #touch.on{display:block}
   .pad{
-    position:absolute;bottom:calc(78px + env(safe-area-inset-bottom));width:74px;height:74px;
+    position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));width:74px;height:74px;
     border:1px solid var(--hair);background:rgba(4,20,28,.5);border-radius:50%;
     pointer-events:auto;display:grid;place-items:center;
     font-family:var(--display);font-weight:700;font-size:26px;color:var(--chart)
@@ -214,7 +216,7 @@
 
   /* helm joystick — a wide slider, drag the thumb left/right for analog steering */
   .joy{
-    position:absolute; bottom:calc(78px + env(safe-area-inset-bottom));
+    position:absolute; bottom:calc(20px + env(safe-area-inset-bottom));
     left:calc(14px + env(safe-area-inset-left));
     right:calc(192px + env(safe-area-inset-right));
     height:74px;
@@ -239,16 +241,18 @@
     .courses{grid-template-columns:1fr;gap:6px}
     .course{display:flex;align-items:center;gap:11px}
     .course canvas{width:64px;margin:0;flex:0 0 auto}
-    .hud-bl{width:120px;padding:6px 10px 7px}
-    .kn b{font-size:26px}
-    #plot{width:96px;height:96px}
+    /* the instrument row wraps beside the plotter rather than running under it */
+    .hud-tl{gap:4px;flex-wrap:wrap;right:calc(122px + env(safe-area-inset-right))}
+    .stat{padding:5px 8px 6px;min-width:54px}
     .stat b{font-size:21px}
+    .kn b{font-size:21px}
+    .stat.speed{width:auto;min-width:76px}
+    .stat.time{min-width:98px}
     .clock{font-size:18px}
-    .hud-tr{min-width:112px}
-    /* lift controls above the speed panel (left) and chartplotter (right) */
-    .pad{width:64px;height:64px;bottom:calc(150px + env(safe-area-inset-bottom))}
+    #plot{width:96px;height:96px}
+    .pad{width:64px;height:64px;bottom:calc(16px + env(safe-area-inset-bottom))}
     #pB{right:calc(88px + env(safe-area-inset-right));font-size:11px}
-    .joy{right:calc(168px + env(safe-area-inset-right)); height:64px; bottom:calc(150px + env(safe-area-inset-bottom))}
+    .joy{right:calc(168px + env(safe-area-inset-right)); height:64px; bottom:calc(16px + env(safe-area-inset-bottom))}
     .joy .thumb{width:46px; height:46px}
   }
   @media (prefers-reduced-motion:reduce){
@@ -265,25 +269,24 @@
   <div class="hud-tl">
     <div class="stat panel"><span class="eyebrow">Lap</span><b class="num" id="lap">1<small>/3</small></b></div>
     <div class="stat panel"><span class="eyebrow">Place</span><b class="num" id="pos">4<small>/4</small></b></div>
-  </div>
-
-  <div class="hud-tr panel">
-    <span class="eyebrow">Elapsed</span>
-    <div class="clock" id="clock">0:00.0</div>
-    <div class="splits">
-      <div>Last <i class="num" id="last">—</i></div>
-      <div class="best">Best <i class="num" id="best">—</i></div>
+    <div class="stat panel speed">
+      <span class="eyebrow">Speed</span>
+      <div class="kn"><b class="num" id="kn">0</b><span>KN</span></div>
+      <div class="bar" id="bar"><i></i></div>
+    </div>
+    <div class="stat panel time">
+      <span class="eyebrow">Elapsed</span>
+      <div class="clock num" id="clock">0:00.0</div>
+      <div class="splits">
+        <div>Last <i class="num" id="last">—</i></div>
+        <div class="best">Best <i class="num" id="best">—</i></div>
+        <div class="rec">Record <i class="num" id="rec">—</i></div>
+      </div>
     </div>
   </div>
 
-  <div class="hud-bl panel">
-    <span class="eyebrow">Speed</span>
-    <div class="kn"><b class="num" id="kn">0</b><span>KN</span></div>
-    <div class="bar" id="bar"><i></i></div>
-  </div>
-
-  <div class="hud-br panel">
-    <div class="eyebrow"><span>Chartplotter</span><span id="plotlbl">Track</span></div>
+  <div class="hud-tr panel">
+    <div class="eyebrow">Chartplotter</div>
     <canvas id="plot" width="264" height="264"></canvas>
   </div>
 
@@ -491,6 +494,30 @@ function buildTrack(def){
 const TRACKS = COURSES.map(buildTrack);
 
 /* ============================================================
+   COURSE RECORDS — your best lap on each course, kept between sessions
+   ============================================================ */
+/* Private browsing and sandboxed frames can refuse storage outright, so every
+   read and write is guarded. If storage is unavailable the records still work
+   for the session; they just aren't remembered afterwards. */
+const REC_KEY = 'tiderunner.records.v1';
+let records = {};
+try {
+  const raw = localStorage.getItem(REC_KEY);
+  const parsed = raw ? JSON.parse(raw) : null;
+  if(parsed && typeof parsed === 'object') records = parsed;
+} catch(e){ records = {}; }
+
+const recordFor = name => typeof records[name] === 'number' ? records[name] : 0;
+
+function setRecord(name, t){
+  const cur = recordFor(name);
+  if(!(t > 0) || (cur && t >= cur)) return false;
+  records[name] = t;
+  try { localStorage.setItem(REC_KEY, JSON.stringify(records)); } catch(e){}
+  return true;
+}
+
+/* ============================================================
    CANVAS / VIEW
    ============================================================ */
 const cv = document.getElementById('game');
@@ -529,6 +556,7 @@ const S = { menu:'menu', count:'count', race:'race', done:'done' };
 let state = S.menu;
 let track = TRACKS[0], courseIdx = 0, totalLaps = 3, skill = 1;
 let boats = [], me = null, cam={x:0,y:0,s:1}, raceT=0, countT=0, wake=[], trail=[], trailAcc=0;
+let newRecord = false;
 
 const RIVALS = [
   {name:'Sea Fret',    col:'#f2f0ea', trim:'#9fb4b8'},
@@ -597,7 +625,7 @@ function startRace(){
   me = boats[3];
   wake.length = 0; trail.length = 0;
   spawnFauna(); spawnBoosts(); spawnMoored();
-  raceT = 0; countT = 3.999;
+  raceT = 0; countT = 3.999; newRecord = false;
   cam.x = me.x; cam.y = me.y;
   state = S.count;
   hud.classList.add('on');
@@ -945,6 +973,7 @@ function stepBoat(b, dt, ctl){
         const lt = raceT - b.lapStart;
         b.lastLap = lt;
         if(!b.bestLap || lt < b.bestLap) b.bestLap = lt;
+        if(b===me && setRecord(track.name, lt)) newRecord = true;
       }
       b.lapStart = raceT;
       if(b.lap >= totalLaps && !b.done){ b.done = true; b.total = raceT; }
@@ -1973,7 +2002,7 @@ const hud=document.getElementById('hud'), cdEl=document.getElementById('countdow
 const lapEl=document.getElementById('lap'), posEl=document.getElementById('pos');
 const clockEl=document.getElementById('clock'), lastEl=document.getElementById('last'), bestEl=document.getElementById('best');
 const knEl=document.getElementById('kn'), barEl=document.getElementById('bar'), warnEl=document.getElementById('warn');
-const draftEl=document.getElementById('draft'), plotLbl=document.getElementById('plotlbl');
+const draftEl=document.getElementById('draft'), recEl=document.getElementById('rec');
 const boostEl=document.getElementById('boost'), sharkEl=document.getElementById('shark');
 
 function fmt(t){
@@ -1988,6 +2017,7 @@ function drawHUD(){
   clockEl.textContent = fmt(raceT) === '—' ? '0:00.0' : fmt(raceT);
   lastEl.textContent = fmt(me.lastLap);
   bestEl.textContent = fmt(me.bestLap);
+  recEl.textContent = fmt(recordFor(track.name));
   const spd = Math.hypot(me.vx,me.vy);
   knEl.textContent = Math.round(spd*0.26);
   barEl.firstElementChild.style.width = Math.min(100, spd/TOP*100) + '%';
@@ -2002,7 +2032,6 @@ function drawHUD(){
   } else if(me.hunter){
     sharkEl.textContent='Shark — get back in the river'; sharkEl.className='on';
   } else sharkEl.className='';
-  plotLbl.textContent = me.shallow ? 'Aground' : 'Midstream';
   drawPlot();
 }
 
@@ -2017,8 +2046,10 @@ function finish(){
   const r = ranked(), place = r.indexOf(me)+1;
   const ord = ['1st','2nd','3rd','4th'];
   rTitle.textContent = place===1 ? 'Won it' : ord[place-1];
+  const tail = place===1 ? 'Clean water all the way home.' : 'The leader is still out there somewhere.';
   rSub.textContent = track.name + ' · ' + totalLaps + ' laps · your best lap ' + fmt(me.bestLap) +
-                     (place===1 ? '. Clean water all the way home.' : '. The leader is still out there somewhere.');
+                     (newRecord ? ' — a new course record. ' : '. ') + tail;
+  refreshRecords();
   rBody.innerHTML = '';
   r.forEach((b,i)=>{
     const tr=document.createElement('tr');
@@ -2041,7 +2072,8 @@ const menuEl=document.getElementById('menu'), coursesEl=document.getElementById(
 TRACKS.forEach((t,i)=>{
   const el=document.createElement('button');
   el.className='course'+(i===0?' sel':'');
-  el.innerHTML='<canvas width="220" height="150"></canvas><div><h3>'+t.name+'</h3><p>'+t.desc+'</p></div>';
+  el.innerHTML='<canvas width="220" height="150"></canvas><div><h3>'+t.name+'</h3><p>'+t.desc+'</p>'+
+                '<p class="tilerec"></p></div>';
   const c=el.querySelector('canvas'), g=c.getContext('2d');
   const bd=t.bounds, pad=12;
   const s=Math.min((c.width-pad*2)/(bd.maxx-bd.minx),(c.height-pad*2)/(bd.maxy-bd.miny));
@@ -2082,6 +2114,16 @@ function syncCourses(){
 moreEl.onclick = () => { expanded = !expanded; syncCourses(); };
 syncCourses();
 
+/* records can change between visits to the menu, so the tiles are refreshed
+   rather than baked in when they're built */
+function refreshRecords(){
+  coursesEl.querySelectorAll('.course').forEach((el,i)=>{
+    const r = recordFor(TRACKS[i].name);
+    el.querySelector('.tilerec').textContent = r ? 'Record ' + fmt(r) : '';
+  });
+}
+refreshRecords();
+
 function segment(id, attr, set){
   const wrap=document.getElementById(id);
   wrap.addEventListener('click', e=>{
@@ -2096,7 +2138,7 @@ segment('skill','s', v=>skill=v);
 document.getElementById('start').onclick = () => { initAudio(); plotFit=null; startRace(); };
 document.getElementById('again').onclick = () => { initAudio(); startRace(); };
 document.getElementById('back').onclick  = () => {
-  state=S.menu; resultsEl.classList.add('hidden'); menuEl.classList.remove('hidden');
+  state=S.menu; resultsEl.classList.add('hidden'); menuEl.classList.remove('hidden'); refreshRecords();
   hud.classList.remove('on'); touch.classList.remove('on');
 };
 
