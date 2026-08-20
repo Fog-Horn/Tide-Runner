@@ -200,38 +200,50 @@
   }
   .ghost:hover{background:rgba(127,233,216,.1)}
 
+  /* ---------- startup identity ---------- */
+  #boot{
+    position:fixed;inset:0;z-index:100;background:#000;display:grid;place-items:center;
+    pointer-events:none;opacity:1;transition:opacity .55s ease;
+  }
+  #boot.done{opacity:0}
+  .boot-lockup{display:grid;justify-items:center;gap:clamp(10px,3vh,28px);width:min(68vw,52vh,360px)}
+  .boot-lockup img{
+    display:block;width:100%;height:auto;opacity:0;transform:scale(.94);
+    animation:boot-logo .7s cubic-bezier(.2,.8,.2,1) .18s forwards;
+  }
+  .boot-lockup span{
+    color:#fff;font-family:"Comic Sans MS","Comic Sans","Chalkboard SE",cursive;
+    font-size:clamp(30px,8vw,48px);line-height:1;opacity:0;transform:translateY(8px);
+    animation:boot-name .55s ease 1.05s forwards;
+  }
+  @keyframes boot-logo{to{opacity:1;transform:scale(1)}}
+  @keyframes boot-name{to{opacity:1;transform:translateY(0)}}
+
   /* ---------- touch controls ---------- */
   #touch{position:fixed;inset:0;z-index:4;display:none;pointer-events:none}
-  #touch.on{display:block}
-  .pad{
-    position:absolute;bottom:calc(20px + env(safe-area-inset-bottom));width:74px;height:74px;
-    border:1px solid var(--hair);background:rgba(4,20,28,.5);border-radius:50%;
-    pointer-events:auto;display:grid;place-items:center;
-    font-family:var(--display);font-weight:700;font-size:26px;color:var(--chart)
-  }
-  .pad.act{background:rgba(127,233,216,.24);color:var(--foam)}
-  #pB{right:calc(100px + env(safe-area-inset-right));font-size:13px;letter-spacing:.04em}
-  #pT{right:calc(14px + env(safe-area-inset-right));border-color:rgba(255,216,74,.5);color:var(--amber);font-size:16px;letter-spacing:.06em}
-  #pT.act{background:rgba(255,216,74,.26);color:#04141c}
-
-  /* helm joystick — a wide slider, drag the thumb left/right for analog steering */
+  #touch.on{display:block;pointer-events:auto;touch-action:none}
   .joy{
-    position:absolute; bottom:calc(20px + env(safe-area-inset-bottom));
-    left:calc(14px + env(safe-area-inset-left));
-    right:calc(192px + env(safe-area-inset-right));
-    height:74px;
-    border:1px solid var(--hair); background:rgba(4,20,28,.5);
-    border-radius:38px; pointer-events:auto;
-    display:flex; align-items:center; justify-content:space-between;
-    padding:0 18px; box-sizing:border-box;
-    font-family:var(--display); font-weight:700; color:rgba(127,233,216,.55); font-size:22px; line-height:1;
-    user-select:none; touch-action:none;
+    --joy-size:clamp(120px,20vmin,156px);
+    position:absolute;left:0;top:0;
+    width:var(--joy-size);height:var(--joy-size);border-radius:50%;
+    border:1px solid rgba(127,233,216,.42);background:rgba(4,20,28,.58);
+    box-shadow:inset 0 0 0 1px rgba(234,247,244,.04),0 8px 28px rgba(0,0,0,.24);
+    opacity:0;transform:translate(-50%,-50%) scale(.86);
+    transition:opacity .1s ease,transform .1s ease;
+    pointer-events:none;user-select:none;
   }
-  .joy.act{background:rgba(127,233,216,.16); color:var(--foam)}
+  .joy::before,.joy::after{content:"";position:absolute;background:rgba(127,233,216,.16);pointer-events:none}
+  .joy::before{left:18%;right:18%;top:50%;height:1px}
+  .joy::after{top:18%;bottom:18%;left:50%;width:1px}
+  .joy.act{
+    opacity:1;transform:translate(-50%,-50%) scale(1);
+    background:rgba(4,20,28,.76);border-color:rgba(127,233,216,.72)
+  }
   .joy .thumb{
     position:absolute; left:50%; top:50%;
-    width:52px; height:52px; border-radius:50%;
-    background:rgba(127,233,216,.5); border:1px solid rgba(234,247,244,.7);
+    width:42%;height:42%;border-radius:50%;
+    background:rgba(127,233,216,.58);border:1px solid rgba(234,247,244,.82);
+    box-shadow:0 4px 16px rgba(0,0,0,.28);
     transform:translate(-50%,-50%); pointer-events:none;
     transition:transform .12s ease-out;
   }
@@ -250,18 +262,22 @@
     .stat.time{min-width:98px}
     .clock{font-size:18px}
     #plot{width:96px;height:96px}
-    .pad{width:64px;height:64px;bottom:calc(16px + env(safe-area-inset-bottom))}
-    #pB{right:calc(88px + env(safe-area-inset-right));font-size:11px}
-    .joy{right:calc(168px + env(safe-area-inset-right)); height:64px; bottom:calc(16px + env(safe-area-inset-bottom))}
-    .joy .thumb{width:46px; height:46px}
   }
   @media (prefers-reduced-motion:reduce){
     #warn.on{animation:none}
     .go-btn,.course,.more{transition:none}
+    .boot-lockup img,.boot-lockup span{animation-duration:.01ms}
   }
 </style>
 </head>
 <body>
+
+<div id="boot" aria-hidden="true">
+  <div class="boot-lockup">
+    <img src="fog-horn-mark.svg" alt="">
+    <span>Fog Horn</span>
+  </div>
+</div>
 
 <canvas id="game"></canvas>
 
@@ -298,9 +314,7 @@
 </div>
 
 <div id="touch">
-  <div class="joy" id="pJ"><span>‹</span><span>›</span><div class="thumb" id="pJt"></div></div>
-  <div class="pad" id="pB">Reverse</div>
-  <div class="pad" id="pT">GO</div>
+  <div class="joy" id="pJ" aria-label="Steering and throttle joystick"><div class="thumb" id="pJt"></div></div>
 </div>
 
 <!-- start screen -->
@@ -695,48 +709,62 @@ addEventListener('keydown', e => {
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
 const touch = document.getElementById('touch');
-const T = {steer:0, t:false, b:false};
-[['pT','t'],['pB','b']].forEach(([id,k])=>{
-  const el = document.getElementById(id);
-  const on = e => {e.preventDefault(); T[k]=true; el.classList.add('act');};
-  const off= e => {e.preventDefault(); T[k]=false; el.classList.remove('act');};
-  el.addEventListener('pointerdown',on); el.addEventListener('pointerup',off);
-  el.addEventListener('pointercancel',off); el.addEventListener('pointerleave',off);
-});
+const T = {steer:0, thr:0};
 
-// analog helm: pointer position within the joystick sets steer -1..1
+// A single radial stick controls helm (x) and signed throttle (y).
 (() => {
   const joy = document.getElementById('pJ'), thumb = document.getElementById('pJt');
-  let active = null;
+  let active = null, originX = 0, originY = 0;
   const move = e => {
-    const r = joy.getBoundingClientRect();
-    const maxDx = r.width/2 - 26;
-    let dx = e.clientX - (r.left + r.width/2);
-    if(dx > maxDx) dx = maxDx; else if(dx < -maxDx) dx = -maxDx;
-    T.steer = dx / maxDx;
-    thumb.style.transform = `translate(calc(-50% + ${dx}px), -50%)`;
+    const radius = joy.offsetWidth * .29;
+    let dx = e.clientX - originX;
+    let dy = e.clientY - originY;
+    const distance = Math.hypot(dx,dy);
+    if(distance > radius){ dx *= radius/distance; dy *= radius/distance; }
+    const deadzone = .10;
+    const axis = value => {
+      const raw = value/radius;
+      return Math.abs(raw)<deadzone ? 0 : Math.sign(raw)*(Math.abs(raw)-deadzone)/(1-deadzone);
+    };
+    T.steer = axis(dx);
+    T.thr = -axis(dy);
+    thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
   };
-  joy.addEventListener('pointerdown', e => {
+  touch.addEventListener('pointerdown', e => {
+    if(active!==null || (state!==S.count && state!==S.race)) return;
     e.preventDefault(); active = e.pointerId;
-    joy.setPointerCapture(e.pointerId); joy.classList.add('act'); move(e);
+    originX = e.clientX; originY = e.clientY;
+    const size = joy.offsetWidth;
+    const margin = size/2 + 12;
+    const x = Math.max(margin,Math.min(innerWidth-margin,originX));
+    const y = Math.max(margin,Math.min(innerHeight-margin,originY));
+    joy.style.left = `${x}px`; joy.style.top = `${y}px`;
+    touch.setPointerCapture(e.pointerId); joy.classList.add('act');
   });
-  joy.addEventListener('pointermove', e => { if(e.pointerId===active) move(e); });
+  touch.addEventListener('pointermove', e => { if(e.pointerId===active) move(e); });
   const release = e => {
     if(e.pointerId !== active) return;
-    active = null; T.steer = 0;
+    active = null; T.steer = 0; T.thr = 0;
     thumb.style.transform = 'translate(-50%,-50%)';
     joy.classList.remove('act');
   };
-  joy.addEventListener('pointerup', release);
-  joy.addEventListener('pointercancel', release);
+  touch.addEventListener('pointerup', release);
+  touch.addEventListener('pointercancel', release);
 })();
 
 function controls(){
   const kb = (keys['a']||keys['arrowleft']?-1:0) + (keys['d']||keys['arrowright']?1:0);
   const steer = Math.max(-1, Math.min(1, T.steer + kb));
-  const thr   = (keys['w']||keys['arrowup']||T.t ? 1 : 0) - (keys['s']||keys['arrowdown']||T.b ? 1 : 0);
+  const keyThr = (keys['w']||keys['arrowup'] ? 1 : 0) - (keys['s']||keys['arrowdown'] ? 1 : 0);
+  const thr = keyThr || T.thr;
   return {steer, thr};
 }
+
+const boot = document.getElementById('boot');
+setTimeout(() => {
+  boot.classList.add('done');
+  setTimeout(() => boot.remove(), 600);
+}, 2300);
 
 /* ============================================================
    SOUND — Web Audio generated procedurally, no assets.
