@@ -11,13 +11,14 @@ dependencies beyond a webfont.
 
 ## Racing
 
-- **Eleven courses**, each with its own channel width and character, from wide meanders to
-  technical hairpins. The menu leads with six — two full rows — and keeps the rest behind
-  **More courses**; a course picked from the full list stays on show when the list
-  collapses again.
-  Generated meanders: Ouse Bends, Kingfisher Cut, Delta Run, Severn Bore, Reedham Weave and
-  Atlantic Leg. Hand-drawn: Monaco Harbour, Amsterdam Cut, Fjord Run, Skerry Passage and
-  Pool of London.
+- **Seventeen courses**, each with its own channel width and character. The menu leads with
+  six — two full rows — and keeps the rest behind **More courses**; a course picked from the
+  full list stays on show when the list collapses again.
+
+  At the gentle end, Fjord Run and Atlantic Leg are four long sweeps you can hold the
+  throttle through. At the other, Corryvreckan and Hell's Mouth are 26 and 24 corners of
+  more or less continuous helm — the two hardest in the game — with Staithes Twist and
+  Monaco Harbour tied for the tightest single corner the hull can still get round.
 - **2, 3 or 5 laps** against three rivals (Sea Fret, Bramble and Mad Mackerel) at one of
   four skill tiers — Easy, Normal, Hard and Insane. The tiers are mostly driving skill
   rather than horsepower: they scale how much of the theoretical corner speed a rival will
@@ -30,6 +31,9 @@ dependencies beyond a webfont.
   For scale, the Insane driving line on the player's own engine laps it in ~23.5s — so
   beating Insane means driving a near-perfect line *and* using the boosts and slipstream
   it leaves on the table.
+- **The Broadwater is a full-fleet race** — twelve boats rather than four, starting three
+  abreast down a channel twice the usual width. A course sets its own fleet size, so any
+  other course could field one too.
 - **Momentum-based handling.** The hull carries its speed through a turn, so ease off before
   the mark and let the stern come round. Astern is available but slow.
 - **Slipstream.** Sitting close behind another boat and roughly in line with it pulls you
@@ -105,7 +109,13 @@ track generation, boat physics and AI, audio, fauna, boosts, moored scenery, ren
 chartplotter, and the HUD and menu screens.
 
 Courses are either generated — a closed loop with sinusoidal meanders laid over it — or laid
-out by hand as control points. Hand-drawn courses have two limits to respect: no corner
-tighter than the hull can turn, and no two reaches closer together than a channel width, or
-they merge into one pool. Existing courses bottom out around a 65px corner radius and 1.6x
-channel width of separation.
+out by hand as control points. Either way two limits have to hold: no corner tighter than
+the hull can turn, and enough land left between two reaches that they don't merge into one
+pool. The floors, taken from the courses already in the game, are a **65px corner radius**
+and **79px of land** between reaches. Measure the land strip (closest approach minus the
+channel width), not the ratio of the two — a wide course like The Broadwater looks close on
+a ratio while actually leaving more land than most of the narrow ones.
+
+For a generated course, more corners means raising the meander count `k`, not the amplitude:
+deep meanders at high frequency fold the bank back through itself long before the corners
+get interesting.

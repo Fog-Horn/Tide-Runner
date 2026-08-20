@@ -421,6 +421,36 @@ const COURSES = [
     [1980,930],[1940,1160],[1760,1300],[1520,1330],
     [1300,1240],[1120,1280],[1000,1440],[760,1460],
     [580,1320],[520,1080],[540,860]]}
+,
+
+  /* Corner-heavy courses. The generated ones raise the meander count instead of
+     its depth — deeper meanders at this frequency fold the bank back through
+     itself long before the corners get interesting. */
+  { name:"Hell's Mouth", desc:'Relentless · no respite', width:132,
+    gen:{cx:1300,cy:950,R:585,ax:1.20,ay:1.06,k:9,amp:.082,k2:5,amp2:.030,phase:.4,count:34}},
+
+  { name:'Corryvreckan', desc:'Whirlpool · brutal', width:124,
+    gen:{cx:1300,cy:950,R:560,ax:1.26,ay:1.02,k:8,amp:.098,k2:4,amp2:.038,phase:2.3,count:30}},
+
+  { name:'Bosphorus Run', desc:'Strait · long sweeps', width:150,
+    gen:{cx:1300,cy:950,R:610,ax:1.44,ay:0.92,k:3,amp:.175,k2:7,amp2:.045,phase:1.6,count:22}},
+
+  { name:'Staithes Twist', desc:'Blind · stone walls', width:122, harbour:true, cps:[
+    [620,900],[660,700],[840,590],[1040,640],[1130,800],
+    [1060,960],[1140,1090],[1330,1080],[1440,940],[1400,780],
+    [1520,660],[1740,650],[1900,760],[1960,950],[1890,1150],
+    [1700,1270],[1480,1290],[1280,1350],[1060,1380],[860,1310],
+    [700,1150]]},
+
+  { name:'Lagoon Circuit', desc:'Shallow · technical', width:128, cps:[
+    [560,820],[700,600],[960,520],[1220,570],[1360,720],
+    [1560,700],[1760,600],[1980,660],[2100,850],[2060,1080],
+    [1880,1220],[1660,1200],[1500,1300],[1280,1380],[1040,1400],
+    [820,1330],[620,1160],[540,980]]},
+
+  /* Wide enough to start a full fleet two abreast and still leave room to pass. */
+  { name:'The Broadwater', desc:'Wide · full fleet', width:296, fleet:12,
+    gen:{cx:1500,cy:1050,R:880,ax:1.32,ay:0.97,k:4,amp:.105,k2:3,amp2:.032,phase:.8,count:26}}
 ];
 
 const SAMPLES = 15;      // centreline points per control segment
@@ -485,7 +515,7 @@ function buildTrack(def){
     const t1=tan[i], t2=tan[(i+cstep)%n];
     SGN[i] = Math.sign((t2.x-t1.x)*nrm[i].x + (t2.y-t1.y)*nrm[i].y) || 0;
   }
-  return {name:def.name, desc:def.desc, harbour:!!def.harbour,
+  return {name:def.name, desc:def.desc, harbour:!!def.harbour, fleet:def.fleet||0,
           pts, tan, nrm, n, width:def.width, half, buoys, tanAngle, R, SGN,
           len, spacing:len/n,
           bounds:{minx:minx-half,miny:miny-half,maxx:maxx+half,maxy:maxy+half}};
@@ -558,10 +588,21 @@ let track = TRACKS[0], courseIdx = 0, totalLaps = 3, skill = 1;
 let boats = [], me = null, cam={x:0,y:0,s:1}, raceT=0, countT=0, wake=[], trail=[], trailAcc=0;
 let newRecord = false;
 
+/* The first three turn out for an ordinary four-boat race; a course with a
+   fleet size takes as many as it needs. Hull colours are picked to stay apart
+   from each other, from your amber, and from the red and green of the marks. */
 const RIVALS = [
   {name:'Sea Fret',    col:'#f2f0ea', trim:'#9fb4b8'},
   {name:'Bramble',     col:'#8a8ff5', trim:'#5b60c9'},
-  {name:'Mad Mackerel',col:'#ff8a3d', trim:'#c85f1e'}
+  {name:'Mad Mackerel',col:'#ff8a3d', trim:'#c85f1e'},
+  {name:'Tern',        col:'#ff5f9e', trim:'#c93a72'},
+  {name:'Kittiwake',   col:'#9fd8ff', trim:'#5f9fc9'},
+  {name:'Peat',        col:'#c69a6d', trim:'#94714a'},
+  {name:'Sorrel',      col:'#b6e04a', trim:'#7fa32e'},
+  {name:'Nightjar',    col:'#c86bff', trim:'#9440c9'},
+  {name:'Pewter',      col:'#7f95a8', trim:'#566a7a'},
+  {name:'Damson',      col:'#9e3b52', trim:'#6f2438'},
+  {name:'Halyard',     col:'#4a90d9', trim:'#2f66a3'}
 ];
 /* Difficulty is skill, not just horsepower:
    safety  — how much of the theoretical corner speed they'll use
@@ -598,16 +639,18 @@ function startRace(){
   track = TRACKS[courseIdx];
   const n = track.n;
   boats = [];
-  const grid = [
-    {row:0,col:-1},{row:0,col:1},{row:1,col:-1},{row:1,col:1}
-  ];
+  // a course can call for a bigger fleet; a wide one starts three abreast
+  const fleet = Math.max(2, Math.min(track.fleet || 4, RIVALS.length + 1));
+  const perRow = fleet > 4 ? 3 : 2;
+  const spread = perRow === 3 ? 0.42 : 0.30;
   // rivals occupy the front of the grid; you start at the back
-  const order = [RIVALS[0], RIVALS[1], RIVALS[2], null];
+  const order = RIVALS.slice(0, fleet-1).concat([null]);
   order.forEach((r, k) => {
-    const g = grid[k];
-    const i = (n - Math.round((120 + g.row*115)/track.spacing) + n*2) % n;
+    const row = Math.floor(k/perRow), slot = k % perRow;
+    const col = perRow === 3 ? slot-1 : (slot ? 1 : -1);
+    const i = (n - Math.round((120 + row*115)/track.spacing) + n*2) % n;
     const p = track.pts[i], t = track.tan[i], nv = track.nrm[i];
-    const off = g.col * track.half*0.30;
+    const off = col * track.half*spread;
     const T = TIERS[skill];
     const b = makeBoat({
       x:p.x + nv.x*off, y:p.y + nv.y*off,
@@ -617,12 +660,12 @@ function startRace(){
       name: r ? r.name : 'Kestrel',
       col: r ? r.col : '#ffd84a',
       trim: r ? r.trim : '#c99a12',
-      power: r ? T.power*(1 - k*0.012) : 1,     // slight spread across the three rivals
+      power: r ? T.power*(1 - k*0.012) : 1,     // slight spread across the field
       tier: T, steerCmd:0, lane:0, noise:0, noiseT:0
     });
     boats.push(b);
   });
-  me = boats[3];
+  me = boats[boats.length-1];      // you are the last one off the grid
   wake.length = 0; trail.length = 0;
   spawnFauna(); spawnBoosts(); spawnMoored();
   raceT = 0; countT = 3.999; newRecord = false;
@@ -2041,11 +2084,15 @@ function drawHUD(){
 const resultsEl=document.getElementById('results'), rBody=document.getElementById('rBody');
 const rTitle=document.getElementById('rTitle'), rSub=document.getElementById('rSub');
 
+function ordinal(k){
+  const suf = ['th','st','nd','rd'], v = k % 100;
+  return k + (suf[(v-20)%10] || suf[v] || suf[0]);
+}
+
 function finish(){
   state = S.done;
   const r = ranked(), place = r.indexOf(me)+1;
-  const ord = ['1st','2nd','3rd','4th'];
-  rTitle.textContent = place===1 ? 'Won it' : ord[place-1];
+  rTitle.textContent = place===1 ? 'Won it' : ordinal(place);
   const tail = place===1 ? 'Clean water all the way home.' : 'The leader is still out there somewhere.';
   rSub.textContent = track.name + ' · ' + totalLaps + ' laps · your best lap ' + fmt(me.bestLap) +
                      (newRecord ? ' — a new course record. ' : '. ') + tail;
