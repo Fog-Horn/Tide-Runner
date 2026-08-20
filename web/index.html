@@ -614,17 +614,20 @@ const RIVALS = [
               bend is exactly how a bad driver ends up in the sand)
    draft   — whether they'll tuck into the wake ahead to be towed along
    pass    — whether they'll pull out of that wake and make the move
-   Up to Hard the pace comes mostly from driving: each tier corners closer
-   to the limit and holds a steadier line than the one below. Insane has
-   run out of driving to gain — it already corners at the limit — so its
-   pace is the engine. At power 1.60 it cruises around 333px/s against the
-   roughly 231 your own boat manages, or 257 in someone's wake, which is
-   the point: you are not going to out-drag it down a straight. */
+   Each tier corners closer to the limit and holds a steadier line than the
+   one below. Engine size is the last resort, because it is the one thing
+   you cannot answer: your own boat settles at about 231px/s, or 257 sitting
+   in someone's wake, and a rival geared past that simply drives away down
+   every straight however well you take the bends. Insane is set just above
+   what a drafting boat can hold — roughly 276px/s — so it is quick enough
+   to have to be chased, and slow enough to be caught in the corners, on the
+   boosts, and in traffic. Winding it much higher stops being difficult and
+   starts being unbeatable. */
 const TIERS = [
   {name:'Easy',   power:.78, safety:.74, apex:.07, noise:.22, react:5.2,  boostIQ:.10, draft:0,   pass:0},
-  {name:'Normal', power:.97, safety:.95, apex:.16, noise:.09, react:9.0,  boostIQ:.55, draft:.35, pass:.25},
-  {name:'Hard',   power:1.13,safety:1.15,apex:.22, noise:.04, react:13.0, boostIQ:.85, draft:.70, pass:.55},
-  {name:'Insane', power:1.60,safety:1.30,apex:.26, noise:.015,react:15.0, boostIQ:1.0, draft:1.0, pass:.90}
+  {name:'Normal', power:1.04,safety:1.02,apex:.18, noise:.08, react:10.0, boostIQ:.55, draft:.35, pass:.25},
+  {name:'Hard',   power:1.18,safety:1.19,apex:.24, noise:.035,react:14.0, boostIQ:.85, draft:.70, pass:.55},
+  {name:'Insane', power:1.24,safety:1.28,apex:.30, noise:.015,react:18.0, boostIQ:1.0, draft:1.0, pass:.90}
 ];
 const OMEGA = 1.25, DECEL = 250, LANE_MAX = 0.50;
 const tightness = r => r>=1100 ? 0 : Math.min(1,(1100-r)/800);

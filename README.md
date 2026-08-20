@@ -27,14 +27,20 @@ dependencies beyond a webfont.
   From Normal upward they also race each other — tucking into the wake ahead for the tow,
   then pulling out to pass once there's clear water and the speed to use it.
 
-  Roughly what each tier laps Ouse Bends in: Easy ~31s, Normal ~25s, Hard ~22s, Insane ~18s.
+  Roughly what each tier laps Ouse Bends in: Easy ~31s, Normal ~23s, Hard ~21s, Insane ~20s.
 
-  **Insane is deliberately not fair.** By Hard the AI is already cornering at its limit —
-  driving better is worth under half a second a lap — so the rest of Insane's pace is engine.
-  It cruises around 333px/s against the ~231 your own boat manages, or ~257 in someone's
-  wake, which means you will not out-drag it down a straight. What's left is corners, boosts
-  and its mistakes. Winning is meant to be rare. Hard, at ~22s against the ~23.5s a
-  near-perfect line gets on your own engine, is the tier that rewards clean driving.
+  **Insane is tuned against one number.** Your boat settles at about 231px/s, or 257 sitting
+  in another boat's wake. A rival geared past that drives away down every straight no matter
+  how well you take the bends — difficulty stops being difficulty and becomes a locked door.
+  Insane sits just above what a drafting boat can hold, near 276px/s: quick enough that you
+  have to chase it, slow enough to be caught in the corners, on the boosts and in traffic.
+  Expect to need the slipstream and every boost on the lap.
+
+  The tiers bunch up at the top on purpose. By Hard the AI is already cornering at its limit,
+  and driving better than that is worth under half a second a lap, so the gap from Hard to
+  Insane is narrower than the one from Easy to Normal. Corner-heavy courses squeeze it
+  further — on Corryvreckan, Insane is only a second a lap up on Hard, because raw engine
+  buys little where you are always turning.
 - **The Broadwater is a full-fleet race** — twelve boats rather than four, starting three
   abreast down a channel twice the usual width. A course sets its own fleet size, so any
   other course could field one too.
