@@ -614,14 +614,17 @@ const RIVALS = [
               bend is exactly how a bad driver ends up in the sand)
    draft   — whether they'll tuck into the wake ahead to be towed along
    pass    — whether they'll pull out of that wake and make the move
-   Easy and Normal leave horsepower on the table; Insane is quick mostly
-   because it corners near the limit and uses traffic, not because of the
-   engine. */
+   Up to Hard the pace comes mostly from driving: each tier corners closer
+   to the limit and holds a steadier line than the one below. Insane has
+   run out of driving to gain — it already corners at the limit — so its
+   pace is the engine. At power 1.60 it cruises around 333px/s against the
+   roughly 231 your own boat manages, or 257 in someone's wake, which is
+   the point: you are not going to out-drag it down a straight. */
 const TIERS = [
-  {name:'Easy',   power:.70, safety:.66, apex:.05, noise:.26, react:4.2,  boostIQ:.10, draft:0,   pass:0},
-  {name:'Normal', power:.86, safety:.85, apex:.13, noise:.11, react:7.5,  boostIQ:.55, draft:.35, pass:.25},
-  {name:'Hard',   power:1.00,safety:.98, apex:.19, noise:.05, react:10.5, boostIQ:.85, draft:.70, pass:.55},
-  {name:'Insane', power:1.10,safety:1.20,apex:.26, noise:.015,react:15.0, boostIQ:1.0, draft:1.0, pass:.90}
+  {name:'Easy',   power:.78, safety:.74, apex:.07, noise:.22, react:5.2,  boostIQ:.10, draft:0,   pass:0},
+  {name:'Normal', power:.97, safety:.95, apex:.16, noise:.09, react:9.0,  boostIQ:.55, draft:.35, pass:.25},
+  {name:'Hard',   power:1.13,safety:1.15,apex:.22, noise:.04, react:13.0, boostIQ:.85, draft:.70, pass:.55},
+  {name:'Insane', power:1.60,safety:1.30,apex:.26, noise:.015,react:15.0, boostIQ:1.0, draft:1.0, pass:.90}
 ];
 const OMEGA = 1.25, DECEL = 250, LANE_MAX = 0.50;
 const tightness = r => r>=1100 ? 0 : Math.min(1,(1100-r)/800);

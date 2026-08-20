@@ -20,17 +20,21 @@ dependencies beyond a webfont.
   more or less continuous helm — the two hardest in the game — with Staithes Twist and
   Monaco Harbour tied for the tightest single corner the hull can still get round.
 - **2, 3 or 5 laps** against three rivals (Sea Fret, Bramble and Mad Mackerel) at one of
-  four skill tiers — Easy, Normal, Hard and Insane. The tiers are mostly driving skill
+  four skill tiers — Easy, Normal, Hard and Insane. Up to Hard the tiers are driving skill
   rather than horsepower: they scale how much of the theoretical corner speed a rival will
   use, how much of the river it takes to straighten a bend, how steady it holds its line,
   how fast it moves the helm, and whether it checks for clear water before grabbing a boost.
   From Normal upward they also race each other — tucking into the wake ahead for the tow,
   then pulling out to pass once there's clear water and the speed to use it.
 
-  Roughly what each tier laps Ouse Bends in: Easy ~35s, Normal ~28s, Hard ~24s, Insane ~22s.
-  For scale, the Insane driving line on the player's own engine laps it in ~23.5s — so
-  beating Insane means driving a near-perfect line *and* using the boosts and slipstream
-  it leaves on the table.
+  Roughly what each tier laps Ouse Bends in: Easy ~31s, Normal ~25s, Hard ~22s, Insane ~18s.
+
+  **Insane is deliberately not fair.** By Hard the AI is already cornering at its limit —
+  driving better is worth under half a second a lap — so the rest of Insane's pace is engine.
+  It cruises around 333px/s against the ~231 your own boat manages, or ~257 in someone's
+  wake, which means you will not out-drag it down a straight. What's left is corners, boosts
+  and its mistakes. Winning is meant to be rare. Hard, at ~22s against the ~23.5s a
+  near-perfect line gets on your own engine, is the tier that rewards clean driving.
 - **The Broadwater is a full-fleet race** — twelve boats rather than four, starting three
   abreast down a channel twice the usual width. A course sets its own fleet size, so any
   other course could field one too.
