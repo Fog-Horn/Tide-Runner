@@ -167,6 +167,15 @@
   }
   .seg button+button{border-left:1px solid var(--hair)}
   .seg button.sel{background:var(--chart);color:#04141c;font-weight:600}
+  .name-field{flex:1 1 200px;min-width:180px}
+  .name-field .opt{opacity:.55;font-weight:400;letter-spacing:.14em}
+  .name-input{
+    width:100%;max-width:280px;font:inherit;font-size:15px;
+    background:rgba(127,233,216,.06);border:1px solid var(--hair);
+    color:var(--foam);padding:8px 11px;letter-spacing:.02em;
+  }
+  .name-input:focus{outline:1px solid var(--chart);background:rgba(127,233,216,.1)}
+  .name-input::placeholder{color:rgba(234,247,244,.35)}
 
   .go-btn{
     margin-left:auto;font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:.09em;
@@ -193,6 +202,7 @@
   td.nm{font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.02em}
   td.t{text-align:right;font-variant-numeric:tabular-nums;font-size:12.5px}
   .dnf{color:rgba(234,247,244,.35)}
+  .est{color:rgba(234,247,244,.72);font-style:italic}
   .btnrow{display:flex;gap:9px;margin-top:18px;flex-wrap:wrap}
   .ghost{
     font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.08em;text-transform:uppercase;
@@ -385,6 +395,10 @@
         <div class="seg" id="skill">
           <button data-s="0">Easy</button><button data-s="1" class="sel">Normal</button><button data-s="2">Hard</button><button data-s="3">Insane</button>
         </div>
+      </div>
+      <div class="name-field">
+        <p class="label">Your name <span class="opt">(optional)</span></p>
+        <input class="name-input" id="playerName" type="text" placeholder="You" maxlength="18" autocomplete="off" spellcheck="false" aria-label="Your name">
       </div>
       <button class="go-btn" id="start">Start race</button>
     </div>
@@ -607,27 +621,51 @@ function buildTrack(def){
 const TRACKS = COURSES.map(buildTrack);
 
 /* ============================================================
-   COURSE RECORDS — your best lap on each course, kept between sessions
+   COURSE RECORDS — best lap plus best totals per lap count.
    ============================================================ */
-/* Private browsing and sandboxed frames can refuse storage outright, so every
-   read and write is guarded. If storage is unavailable the records still work
-   for the session; they just aren't remembered afterwards. */
-const REC_KEY = 'tiderunner.records.v1';
+const REC_KEY = 'tiderunner.records.v2';
+const LEGACY_REC_KEY = 'tiderunner.records.v1';
 let records = {};
-try {
-  const raw = localStorage.getItem(REC_KEY);
-  const parsed = raw ? JSON.parse(raw) : null;
-  if(parsed && typeof parsed === 'object') records = parsed;
-} catch(e){ records = {}; }
-
-const recordFor = name => typeof records[name] === 'number' ? records[name] : 0;
-
-function setRecord(name, t){
-  const cur = recordFor(name);
-  if(!(t > 0) || (cur && t >= cur)) return false;
-  records[name] = t;
+(function loadRecords(){
+  try {
+    const raw = localStorage.getItem(REC_KEY);
+    const parsed = raw ? JSON.parse(raw) : null;
+    if(parsed && typeof parsed === 'object'){ records = parsed; return; }
+  } catch(e){}
+  try {
+    const raw = localStorage.getItem(LEGACY_REC_KEY);
+    const legacy = raw ? JSON.parse(raw) : null;
+    if(legacy && typeof legacy === 'object'){
+      for(const k of Object.keys(legacy)){
+        if(typeof legacy[k] === 'number') records[k] = { lap: legacy[k], totals: {} };
+      }
+      try { localStorage.setItem(REC_KEY, JSON.stringify(records)); } catch(e){}
+    }
+  } catch(e){}
+})();
+function saveRecords(){
   try { localStorage.setItem(REC_KEY, JSON.stringify(records)); } catch(e){}
-  return true;
+}
+function ensureRec(name){
+  const r = records[name];
+  if(!r || typeof r !== 'object' || Array.isArray(r)) records[name] = { lap: 0, totals: {} };
+  if(typeof records[name].lap !== 'number') records[name].lap = 0;
+  if(!records[name].totals || typeof records[name].totals !== 'object') records[name].totals = {};
+  return records[name];
+}
+function bestLapFor(name){ const r = records[name]; return r && typeof r.lap === 'number' ? r.lap : 0; }
+function bestTotalFor(name, laps){ const r = records[name]; return r && r.totals && typeof r.totals[laps] === 'number' ? r.totals[laps] : 0; }
+const recordFor = name => bestLapFor(name);
+function setLapRecord(name, t){
+  const r = ensureRec(name);
+  if(!(t > 0) || (r.lap && t >= r.lap)) return false;
+  r.lap = t; saveRecords(); return true;
+}
+function setTotalRecord(name, laps, t){
+  const r = ensureRec(name);
+  const cur = r.totals[laps];
+  if(!(t > 0) || (cur && t >= cur)) return false;
+  r.totals[laps] = t; saveRecords(); return true;
 }
 
 /* ============================================================
@@ -669,7 +707,12 @@ const S = { menu:'menu', count:'count', race:'race', done:'done', pause:'pause' 
 let state = S.menu, pausedFrom = null;
 let track = TRACKS[0], courseIdx = 0, totalLaps = 3, skill = 1;
 let boats = [], me = null, cam={x:0,y:0,s:1}, raceT=0, countT=0, wake=[], trail=[], trailAcc=0;
-let newRecord = false;
+let newLapRecord = false, newTotalRecord = false;
+function playerName(){
+  const raw = (SETTINGS && SETTINGS.name) || '';
+  const trimmed = raw.trim();
+  return trimmed || 'You';
+}
 
 /* The first three turn out for an ordinary four-boat race; a course with a
    fleet size takes as many as it needs. Hull colours are picked to stay apart
@@ -746,7 +789,7 @@ function startRace(){
       h:Math.atan2(t.y,t.x), idx:i, prevIdx:i,
       lap:-1,               // sat behind the line; crossing it starts lap 1
       ai: r!==null,
-      name: r ? r.name : 'Kestrel',
+      name: r ? r.name : playerName(),
       col: r ? r.col : '#ffd84a',
       trim: r ? r.trim : '#c99a12',
       power: r ? T.power*(1 - k*0.012) : 1,     // slight spread across the field
@@ -757,7 +800,7 @@ function startRace(){
   me = boats[boats.length-1];      // you are the last one off the grid
   wake.length = 0; trail.length = 0;
   spawnFauna(); spawnBoosts(); spawnMoored();
-  raceT = 0; countT = 3.999; newRecord = false;
+  raceT = 0; countT = 3.999; newLapRecord = false; newTotalRecord = false;
   cam.x = me.x; cam.y = me.y;
   state = S.count;
   hud.classList.add('on');
@@ -851,12 +894,13 @@ setTimeout(() => {
 let AC = null, AUD = null;
 let musicBar = 0, musicNext = 0;
 
-// Persisted audio preferences.
-const SETTINGS = { music:true, sfx:true };
+// Persisted audio + player preferences.
+const SETTINGS = { music:true, sfx:true, name:'' };
 try {
   const saved = JSON.parse(localStorage.getItem('tr-settings') || '{}');
   if(typeof saved.music === 'boolean') SETTINGS.music = saved.music;
   if(typeof saved.sfx   === 'boolean') SETTINGS.sfx   = saved.sfx;
+  if(typeof saved.name  === 'string')  SETTINGS.name  = saved.name.slice(0, 18);
 } catch(e){}
 function saveSettings(){
   try { localStorage.setItem('tr-settings', JSON.stringify(SETTINGS)); } catch(e){}
@@ -1152,10 +1196,13 @@ function stepBoat(b, dt, ctl){
         const lt = raceT - b.lapStart;
         b.lastLap = lt;
         if(!b.bestLap || lt < b.bestLap) b.bestLap = lt;
-        if(b===me && setRecord(track.name, lt)) newRecord = true;
+        if(b===me && setLapRecord(track.name, lt)) newLapRecord = true;
       }
       b.lapStart = raceT;
-      if(b.lap >= totalLaps && !b.done){ b.done = true; b.total = raceT; }
+      if(b.lap >= totalLaps && !b.done){
+        b.done = true; b.total = raceT;
+        if(b===me && setTotalRecord(track.name, totalLaps, b.total)) newTotalRecord = true;
+      }
     }
   } else if(b.prevIdx < q && b.idx > n-q){ b.lap--; }
 
@@ -2236,23 +2283,44 @@ function finish(){
   const r = ranked(), place = r.indexOf(me)+1;
   rTitle.textContent = place===1 ? 'Won it' : ordinal(place);
   const tail = place===1 ? 'Clean water all the way home.' : 'The leader is still out there somewhere.';
-  rSub.textContent = track.name + ' · ' + totalLaps + ' laps · your best lap ' + fmt(me.bestLap) +
-                     (newRecord ? ' — a new course record. ' : '. ') + tail;
+  const bits = ['your best lap ' + fmt(me.bestLap)];
+  if(newLapRecord)   bits.push('new lap record');
+  if(newTotalRecord) bits.push('new ' + totalLaps + '-lap record');
+  rSub.textContent = track.name + ' · ' + totalLaps + ' laps · ' + bits.join(' · ') + '. ' + tail;
   refreshRecords();
   rBody.innerHTML = '';
   r.forEach((b,i)=>{
     const tr=document.createElement('tr');
     if(b===me) tr.className='you';
+    let totalCell;
+    if(b.done){
+      totalCell = '<td class="t">' + fmt(b.total) + '</td>';
+    } else {
+      const est = projectTotal(b);
+      totalCell = est
+        ? '<td class="t est" title="projected finish time">~' + fmt(est) + '</td>'
+        : '<td class="t dnf">lap ' + Math.min(b.lap+1, totalLaps) + '</td>';
+    }
     tr.innerHTML =
       '<td class="pos">'+(i+1)+'</td>'+
-      '<td class="nm">'+b.name+(b===me?' <span style="font-size:11px;opacity:.65">(you)</span>':'')+'</td>'+
+      '<td class="nm">'+b.name+'</td>'+
       '<td class="t">'+fmt(b.bestLap)+'</td>'+
-      '<td class="t'+(b.done?'':' dnf')+'">'+(b.done?fmt(b.total):'lap '+Math.min(b.lap+1,totalLaps)+'')+'</td>';
+      totalCell;
     rBody.appendChild(tr);
   });
   resultsEl.classList.remove('hidden');
   document.body.classList.remove('racing');
   touch.classList.remove('on');
+}
+
+function projectTotal(b){
+  if(b.done) return b.total;
+  if(!raceT) return 0;
+  const n = track.n;
+  const frac = Math.max(0, Math.min(0.999, b.idx / n));
+  const progress = Math.max(0, b.lap) + frac;
+  if(progress <= 0.05) return 0;
+  return (raceT / progress) * totalLaps;
 }
 
 /* ============================================================
@@ -2308,8 +2376,13 @@ syncCourses();
    rather than baked in when they're built */
 function refreshRecords(){
   coursesEl.querySelectorAll('.course').forEach((el,i)=>{
-    const r = recordFor(TRACKS[i].name);
-    el.querySelector('.tilerec').textContent = r ? 'Record ' + fmt(r) : '';
+    const name = TRACKS[i].name;
+    const lap = bestLapFor(name);
+    const total = bestTotalFor(name, totalLaps);
+    const parts = [];
+    if(lap)   parts.push('Lap ' + fmt(lap));
+    if(total) parts.push(totalLaps + '-lap ' + fmt(total));
+    el.querySelector('.tilerec').textContent = parts.join(' · ');
   });
 }
 refreshRecords();
@@ -2322,8 +2395,17 @@ function segment(id, attr, set){
     b.classList.add('sel'); set(+b.dataset[attr]);
   });
 }
-segment('laps','l', v=>totalLaps=v);
-segment('skill','s', v=>skill=v);
+segment('laps','l', v => { totalLaps = v; refreshRecords(); });
+segment('skill','s', v => { skill = v; });
+
+const nameInput = document.getElementById('playerName');
+if(nameInput){
+  nameInput.value = SETTINGS.name || '';
+  nameInput.addEventListener('input', () => {
+    SETTINGS.name = nameInput.value.slice(0, 18);
+    saveSettings();
+  });
+}
 
 document.getElementById('start').onclick = () => { initAudio(); plotFit=null; startRace(); };
 document.getElementById('again').onclick = () => { initAudio(); startRace(); };
@@ -2408,7 +2490,7 @@ sfxTog.onclick   = () => { SETTINGS.sfx   = !SETTINGS.sfx;   syncToggles(); save
    ============================================================ */
 // idle backdrop so the menu isn't sitting on a flat colour
 track = TRACKS[0];
-me = makeBoat({x:track.pts[0].x, y:track.pts[0].y, col:'#ffd84a', trim:'#c99a12', power:1, name:'Kestrel'});
+me = makeBoat({x:track.pts[0].x, y:track.pts[0].y, col:'#ffd84a', trim:'#c99a12', power:1, name:playerName()});
 boats=[me]; cam.x=me.x; cam.y=me.y; cam.s=1;
 spawnFauna(); spawnBoosts();
 
