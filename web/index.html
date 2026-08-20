@@ -128,13 +128,13 @@
   .sheet{width:min(720px,100%);max-height:100%;overflow:auto;padding:22px 22px 20px}
 
   .brand{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;
-    border-bottom:1px solid var(--hair);padding-bottom:12px;margin-bottom:16px}
+    border-bottom:1px solid var(--hair);padding-bottom:12px;margin-bottom:16px;position:relative}
   h1{
     margin:0;font-family:var(--display);font-weight:700;font-size:clamp(40px,9vw,66px);
     line-height:.86;letter-spacing:.005em;text-transform:uppercase;
   }
   h1 em{font-style:normal;color:var(--chart)}
-  .tag{font-size:11px;line-height:1.6;color:rgba(234,247,244,.6);max-width:270px}
+  .tag{font-size:11px;line-height:1.6;color:rgba(234,247,244,.6);max-width:270px;padding-right:48px}
 
   .label{font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(127,233,216,.72);margin:0 0 8px}
 
@@ -207,13 +207,12 @@
   }
   #boot.done{opacity:0}
   .boot-lockup{display:grid;justify-items:center;gap:clamp(10px,3vh,28px);width:min(68vw,52vh,360px)}
-  .boot-lockup img{
+  .boot-mark{
     display:block;width:100%;height:auto;opacity:0;transform:scale(.94);
     animation:boot-logo .7s cubic-bezier(.2,.8,.2,1) .18s forwards;
   }
-  .boot-lockup span{
-    color:#fff;font-family:"Comic Sans MS","Comic Sans","Chalkboard SE",cursive;
-    font-size:clamp(30px,8vw,48px);line-height:1;opacity:0;transform:translateY(8px);
+  .boot-name{
+    display:block;width:82%;height:auto;opacity:0;transform:translateY(8px);
     animation:boot-name .55s ease 1.05s forwards;
   }
   @keyframes boot-logo{to{opacity:1;transform:scale(1)}}
@@ -249,6 +248,49 @@
   }
   .joy.act .thumb{transition:none}
 
+  /* ---------- pause + settings ---------- */
+  .pause-btn{
+    position:fixed;
+    bottom:calc(22px + env(safe-area-inset-bottom));
+    right:calc(20px + env(safe-area-inset-right));
+    z-index:6;pointer-events:auto;cursor:pointer;
+    display:none;align-items:center;justify-content:center;
+    width:46px;height:46px;padding:0;border-radius:50%;
+    color:var(--chart);background:var(--panel);border:1px solid var(--hair);
+    font:inherit;
+  }
+  body.racing .pause-btn{display:inline-flex}
+  .pause-btn::before,.pause-btn::after{
+    content:"";display:block;width:5px;height:16px;background:var(--chart);border-radius:1px;
+  }
+  .pause-btn::before{margin-right:5px}
+  .gear{
+    position:absolute;top:0;right:0;
+    width:36px;height:36px;padding:0;
+    display:grid;place-items:center;border:1px solid var(--hair);
+    background:rgba(127,233,216,.04);color:var(--chart);cursor:pointer;
+    font-size:18px;line-height:1;
+  }
+  .gear:hover{background:rgba(127,233,216,.1)}
+  .setrow{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:14px 4px;border-bottom:1px solid var(--hair);
+  }
+  .setrow label{font-family:var(--display);font-weight:600;font-size:20px;letter-spacing:.04em}
+  .toggle{
+    width:54px;height:28px;border-radius:14px;border:1px solid var(--hair);
+    background:rgba(127,233,216,.08);position:relative;cursor:pointer;padding:0;
+    transition:background .16s ease;
+  }
+  .toggle span{
+    position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;
+    background:var(--foam);transition:left .16s ease,background .16s ease;
+  }
+  .toggle[data-on="1"]{background:var(--chart)}
+  .toggle[data-on="1"] span{left:28px;background:#04141c}
+  .btnstack{display:flex;flex-direction:column;gap:9px;margin-top:18px}
+  .btnstack .go-btn,.btnstack .ghost{margin:0;width:100%;text-align:center}
+
   @media (max-width:560px){
     .courses{grid-template-columns:1fr;gap:6px}
     .course{display:flex;align-items:center;gap:11px}
@@ -266,7 +308,7 @@
   @media (prefers-reduced-motion:reduce){
     #warn.on{animation:none}
     .go-btn,.course,.more{transition:none}
-    .boot-lockup img,.boot-lockup span{animation-duration:.01ms}
+    .boot-mark,.boot-name{animation-duration:.01ms}
   }
 </style>
 </head>
@@ -274,8 +316,8 @@
 
 <div id="boot" aria-hidden="true">
   <div class="boot-lockup">
-    <img src="fog-horn-mark.svg" alt="">
-    <span>Fog Horn</span>
+    <img class="boot-mark" src="fog-horn-mark.svg" alt="">
+    <img class="boot-name" src="fog-horn-name.svg" alt="">
   </div>
 </div>
 
@@ -287,7 +329,7 @@
     <div class="stat panel"><span class="eyebrow">Place</span><b class="num" id="pos">4<small>/4</small></b></div>
     <div class="stat panel speed">
       <span class="eyebrow">Speed</span>
-      <div class="kn"><b class="num" id="kn">0</b><span>KN</span></div>
+      <div class="kn"><b class="num" id="kn">0</b><span>KM</span></div>
       <div class="bar" id="bar"><i></i></div>
     </div>
     <div class="stat panel time">
@@ -302,7 +344,6 @@
   </div>
 
   <div class="hud-tr panel">
-    <div class="eyebrow">Chartplotter</div>
     <canvas id="plot" width="264" height="264"></canvas>
   </div>
 
@@ -313,6 +354,8 @@
   <div id="shark">Shark</div>
 </div>
 
+<button class="pause-btn" id="pauseBtn" aria-label="Pause"></button>
+
 <div id="touch">
   <div class="joy" id="pJ" aria-label="Steering and throttle joystick"><div class="thumb" id="pJt"></div></div>
 </div>
@@ -322,7 +365,8 @@
   <div class="sheet panel">
     <div class="brand">
       <h1>Tide<em>runner</em></h1>
-      <p class="tag">Four boats, a winding river and a lot of red and green marks. The current runs with you — keep the reds to port and stay off the sand.</p>
+      <p class="tag">Race the fleet at a difficulty of your choosing — and watch out for the sharks.</p>
+      <button class="gear" id="homeSettings" aria-label="Settings">⚙</button>
     </div>
 
     <p class="label">Course</p>
@@ -344,10 +388,35 @@
       </div>
       <button class="go-btn" id="start">Start race</button>
     </div>
+  </div>
+</div>
 
-    <div class="keys">
-      <kbd>W</kbd> <kbd>↑</kbd> throttle &nbsp;·&nbsp; <kbd>S</kbd> <kbd>↓</kbd> astern &nbsp;·&nbsp; <kbd>A</kbd><kbd>D</kbd> <kbd>←</kbd><kbd>→</kbd> helm &nbsp;·&nbsp; <kbd>R</kbd> restart<br>
-      The hull carries its momentum through a turn — ease off before the mark and let the stern come round. Sitting in another boat's wake pulls you along. Grab the yellow surges for a boost. Stay aground too long and something finds you.
+<!-- pause -->
+<div class="screen hidden" id="pauseMenu">
+  <div class="sheet panel" style="max-width:420px">
+    <div class="brand"><h1 style="font-size:clamp(34px,8vw,54px)">Paused</h1></div>
+    <div class="btnstack">
+      <button class="go-btn" id="resumeBtn">Resume</button>
+      <button class="ghost" id="pauseSettingsBtn">Settings</button>
+      <button class="ghost" id="exitBtn">Exit to menu</button>
+    </div>
+  </div>
+</div>
+
+<!-- settings -->
+<div class="screen hidden" id="settingsMenu">
+  <div class="sheet panel" style="max-width:420px">
+    <div class="brand"><h1 style="font-size:clamp(30px,7vw,48px)">Settings</h1></div>
+    <div class="setrow">
+      <label for="musicToggle">Music</label>
+      <button class="toggle" id="musicToggle" data-on="1" aria-label="Music"><span></span></button>
+    </div>
+    <div class="setrow">
+      <label for="sfxToggle">Game sounds</label>
+      <button class="toggle" id="sfxToggle" data-on="1" aria-label="Game sounds"><span></span></button>
+    </div>
+    <div class="btnstack">
+      <button class="go-btn" id="settingsDone">Done</button>
     </div>
   </div>
 </div>
@@ -596,8 +665,8 @@ const shoalPat = ctx.createPattern(shoalTile(),'repeat');
 /* ============================================================
    STATE
    ============================================================ */
-const S = { menu:'menu', count:'count', race:'race', done:'done' };
-let state = S.menu;
+const S = { menu:'menu', count:'count', race:'race', done:'done', pause:'pause' };
+let state = S.menu, pausedFrom = null;
 let track = TRACKS[0], courseIdx = 0, totalLaps = 3, skill = 1;
 let boats = [], me = null, cam={x:0,y:0,s:1}, raceT=0, countT=0, wake=[], trail=[], trailAcc=0;
 let newRecord = false;
@@ -651,7 +720,7 @@ function makeBoat(o){
     x:0,y:0,h:0,vx:0,vy:0, idx:0, prevIdx:0, lap:0, off:0, done:false,
     boost:0, offTime:0, hunter:null, eaten:0, chomped:0,
     lapStart:0, lastLap:0, bestLap:0, total:0, shallow:false, drafting:false,
-    bump:0, spawnT:0
+    bump:0, spawnT:0, bumpSfxT:0
   }, o);
 }
 
@@ -692,6 +761,7 @@ function startRace(){
   cam.x = me.x; cam.y = me.y;
   state = S.count;
   hud.classList.add('on');
+  document.body.classList.add('racing');
   touch.classList.toggle('on', isTouch);
   menuEl.classList.add('hidden'); resultsEl.classList.add('hidden');
 }
@@ -705,6 +775,10 @@ addEventListener('keydown', e => {
   if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
   if(e.key.toLowerCase()==='r' && state!==S.menu) startRace();
+  if(e.key==='Escape' || e.key.toLowerCase()==='p'){
+    if(state===S.race || state===S.count) pauseGame();
+    else if(state===S.pause) resumeGame();
+  }
 });
 addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
@@ -726,8 +800,13 @@ const T = {steer:0, thr:0};
       const raw = value/radius;
       return Math.abs(raw)<deadzone ? 0 : Math.sign(raw)*(Math.abs(raw)-deadzone)/(1-deadzone);
     };
-    T.steer = axis(dx);
-    T.thr = -axis(dy);
+    // Push in the direction the boat is heading = forward; sideways = steer.
+    const h = me ? me.h : 0;
+    const cs = Math.cos(h), sn = Math.sin(h);
+    const fwd   =  dx*cs + dy*sn;
+    const right = -dx*sn + dy*cs;
+    T.thr   = axis(fwd);
+    T.steer = axis(right);
     thumb.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
   };
   touch.addEventListener('pointerdown', e => {
@@ -772,6 +851,17 @@ setTimeout(() => {
 let AC = null, AUD = null;
 let musicBar = 0, musicNext = 0;
 
+// Persisted audio preferences.
+const SETTINGS = { music:true, sfx:true };
+try {
+  const saved = JSON.parse(localStorage.getItem('tr-settings') || '{}');
+  if(typeof saved.music === 'boolean') SETTINGS.music = saved.music;
+  if(typeof saved.sfx   === 'boolean') SETTINGS.sfx   = saved.sfx;
+} catch(e){}
+function saveSettings(){
+  try { localStorage.setItem('tr-settings', JSON.stringify(SETTINGS)); } catch(e){}
+}
+
 // A four-bar loop, one chord per bar: C — Am — F — G (I-vi-IV-V).
 // Each entry = [bass_freq, [arp_freqs across the bar]].
 const musicSeq = [
@@ -787,17 +877,17 @@ function initAudio(){
   catch(e){ return; }
   const master = AC.createGain(); master.gain.value = 0.55; master.connect(AC.destination);
 
-  // ---- Engine: sub-sine + saw growl through an LFO-modulated lowpass,
+  // ---- Engine: soft sub-sine + gentle triangle harmonic through a lowpass,
   //      plus a filtered pink-noise "water rush" that swells with speed. ----
-  const sub = AC.createOscillator(); sub.type='sine'; sub.frequency.value=45;
-  const buzz = AC.createOscillator(); buzz.type='sawtooth'; buzz.frequency.value=90;
+  const sub = AC.createOscillator(); sub.type='sine'; sub.frequency.value=42;
+  const hum = AC.createOscillator(); hum.type='triangle'; hum.frequency.value=126;
 
-  const lfo = AC.createOscillator(); lfo.type='sine'; lfo.frequency.value=4;
-  const lfoGain = AC.createGain(); lfoGain.gain.value=80;
+  const lfo = AC.createOscillator(); lfo.type='sine'; lfo.frequency.value=2.6;
+  const lfoGain = AC.createGain(); lfoGain.gain.value=16;
   lfo.connect(lfoGain);
 
   const filt = AC.createBiquadFilter(); filt.type='lowpass';
-  filt.frequency.value=350; filt.Q.value=1.4;
+  filt.frequency.value=240; filt.Q.value=0.8;
   lfoGain.connect(filt.frequency);
 
   const nLen = (AC.sampleRate*2)|0;
@@ -813,21 +903,25 @@ function initAudio(){
   }
   const noise = AC.createBufferSource(); noise.buffer=nBuf; noise.loop=true;
   const nFilt = AC.createBiquadFilter(); nFilt.type='bandpass';
-  nFilt.frequency.value=700; nFilt.Q.value=0.6;
+  nFilt.frequency.value=600; nFilt.Q.value=0.5;
   const nGain = AC.createGain(); nGain.gain.value=0;
   noise.connect(nFilt).connect(nGain);
 
   const g = AC.createGain(); g.gain.value=0;
-  sub.connect(filt); buzz.connect(filt); filt.connect(g);
-  g.connect(master); nGain.connect(master);
-  sub.start(); buzz.start(); lfo.start(); noise.start();
+  sub.connect(filt); hum.connect(filt); filt.connect(g);
+
+  // ---- SFX bus so game sounds can be muted independently of music. ----
+  const sfxGain = AC.createGain(); sfxGain.gain.value = SETTINGS.sfx ? 1 : 0;
+  sfxGain.connect(master);
+  g.connect(sfxGain); nGain.connect(sfxGain);
+  sub.start(); hum.start(); lfo.start(); noise.start();
 
   // ---- Music bus ----
   const musicGain = AC.createGain(); musicGain.gain.value=0;
   musicGain.connect(master);
 
-  AUD = { master, musicGain,
-          engine:{ sub, buzz, lfo, lfoGain, filt, g, nFilt, nGain },
+  AUD = { master, musicGain, sfxGain,
+          engine:{ sub, hum, lfo, lfoGain, filt, g, nFilt, nGain },
           lastBeep:99, musicOn:false };
 }
 
@@ -838,18 +932,22 @@ function stepAudio(){
   const spd = Math.hypot(me.vx, me.vy);
   const boosted = me.boost>0, eaten = me.eaten>0;
   const idle = state === S.count;
-  const thr = idle ? 0.15 : Math.min(1, spd/TOP + (boosted?0.15:0));
+  const running = state === S.race || state === S.count;
+  const thr = running ? Math.min(1, spd/TOP + (boosted?0.15:0)) : 0;
 
-  e.sub.frequency.setTargetAtTime(38 + thr*38, t, tc);
-  e.buzz.frequency.setTargetAtTime(76 + thr*80, t, tc);
-  e.filt.frequency.setTargetAtTime(220 + thr*900 + (boosted?280:0), t, tc);
-  e.lfoGain.gain.setTargetAtTime(50 + thr*90, t, tc);
-  e.lfo.frequency.setTargetAtTime(3 + thr*8, t, tc);
-  e.nFilt.frequency.setTargetAtTime(400 + thr*1600, t, tc);
-  e.nGain.gain.setTargetAtTime((state===S.race && !eaten) ? thr*0.04 : 0, t, tc);
-  const vol = (state===S.race && !eaten) ? 0.03 + thr*0.09
-            : (state===S.count) ? 0.035 : 0;
-  e.g.gain.setTargetAtTime(vol, t, 0.2);
+  e.sub.frequency.setTargetAtTime(38 + thr*24, t, tc);
+  e.hum.frequency.setTargetAtTime(114 + thr*72, t, tc);
+  e.filt.frequency.setTargetAtTime(200 + thr*520 + (boosted?200:0), t, tc);
+  e.lfoGain.gain.setTargetAtTime(12 + thr*22, t, tc);
+  e.lfo.frequency.setTargetAtTime(2.4 + thr*4, t, tc);
+  e.nFilt.frequency.setTargetAtTime(360 + thr*1000, t, tc);
+  e.nGain.gain.setTargetAtTime((state===S.race && !eaten) ? thr*0.025 : 0, t, tc);
+  const vol = (state===S.race && !eaten) ? 0.016 + thr*0.05
+            : (state===S.count) ? 0.02
+            : 0;
+  e.g.gain.setTargetAtTime(vol, t, 0.22);
+
+  AUD.sfxGain.gain.setTargetAtTime(SETTINGS.sfx ? 1 : 0, t, 0.06);
 
   if(state===S.count){
     const v = Math.ceil(countT-1);
@@ -868,10 +966,11 @@ function startMusic(){
 function updateMusic(){
   if(!AUD) return;
   const t = AC.currentTime;
-  const inLobby = state===S.menu || state===S.done;
-  const target = AUD.musicOn ? (inLobby ? 0.30 : 0.05) : 0;
+  const inLobby = state===S.menu || state===S.done || state===S.pause;
+  const wantOn = AUD.musicOn && SETTINGS.music;
+  const target = wantOn ? (inLobby ? 0.30 : 0.05) : 0;
   AUD.musicGain.gain.setTargetAtTime(target, t, 0.6);
-  if(!AUD.musicOn) return;
+  if(!wantOn) return;
   const bpm = 132, beat = 60/bpm, bar = beat*4;
   while(musicNext < t + 0.30){
     scheduleBar(musicNext, musicBar);
@@ -925,7 +1024,7 @@ function musicHat(at){
 }
 
 function sfxNoise(f0, f1, dur, vol){
-  if(!AC) return;
+  if(!AC || !SETTINGS.sfx) return;
   const t = AC.currentTime;
   const len = Math.max(1, (AC.sampleRate*dur)|0);
   const buf = AC.createBuffer(1, len, AC.sampleRate);
@@ -937,17 +1036,20 @@ function sfxNoise(f0, f1, dur, vol){
   filt.frequency.exponentialRampToValueAtTime(Math.max(40,f1), t+dur);
   const g = AC.createGain(); g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  src.connect(filt).connect(g).connect(AUD.master); src.start();
+  src.connect(filt).connect(g).connect(AUD.sfxGain); src.start();
 }
 function sfxTone(freq, dur, vol, type){
-  if(!AC) return;
+  if(!AC || !SETTINGS.sfx) return;
   const t = AC.currentTime;
   const o = AC.createOscillator(); o.type = type||'square'; o.frequency.value = freq;
   const g = AC.createGain(); g.gain.setValueAtTime(vol, t);
   g.gain.exponentialRampToValueAtTime(0.0001, t+dur);
-  o.connect(g).connect(AUD.master); o.start(); o.stop(t+dur+0.02);
+  o.connect(g).connect(AUD.sfxGain); o.start(); o.stop(t+dur+0.02);
 }
-function sfxBump(){ sfxNoise(900, 80, 0.28, 0.28); }
+function sfxBump(intensity){
+  const k = Math.max(0.2, Math.min(1, intensity||0.4));
+  sfxNoise(700 + 400*k, 70, 0.22 + 0.08*k, 0.16 + 0.18*k);
+}
 function sfxBoost(){
   sfxTone(320, 0.15, 0.20, 'triangle');
   setTimeout(()=>sfxTone(520, 0.12, 0.16, 'triangle'), 90);
@@ -1064,13 +1166,19 @@ function stepBoat(b, dt, ctl){
       const ux=dx/(d||1), uy=dy/(d||1);
       b.x = by.x + ux*22; b.y = by.y + uy*22;
       const dot = b.vx*ux + b.vy*uy;
+      // impact speed toward the buoy (positive when actually driving into it)
+      const impact = Math.max(0, -dot);
       b.vx -= 1.5*dot*ux; b.vy -= 1.5*dot*uy;
       b.vx *= .62; b.vy *= .62; b.bump = 0.35;
-      if(b===me) sfxBump();
+      if(b===me && b.bumpSfxT<=0 && impact > 22){
+        sfxBump(Math.min(1, impact/140));
+        b.bumpSfxT = 0.5;
+      }
       if(!REDUCED) for(let i=0;i<5;i++) spray(b.x,b.y,'#eaf7f4',1.4);
     }
   }
   if(b.bump>0) b.bump -= dt;
+  if(b.bumpSfxT>0) b.bumpSfxT -= dt;
 }
 
 function autopilot(b, dt){
@@ -2143,6 +2251,7 @@ function finish(){
     rBody.appendChild(tr);
   });
   resultsEl.classList.remove('hidden');
+  document.body.classList.remove('racing');
   touch.classList.remove('on');
 }
 
@@ -2220,8 +2329,79 @@ document.getElementById('start').onclick = () => { initAudio(); plotFit=null; st
 document.getElementById('again').onclick = () => { initAudio(); startRace(); };
 document.getElementById('back').onclick  = () => {
   state=S.menu; resultsEl.classList.add('hidden'); menuEl.classList.remove('hidden'); refreshRecords();
-  hud.classList.remove('on'); touch.classList.remove('on');
+  hud.classList.remove('on'); document.body.classList.remove('racing'); touch.classList.remove('on');
 };
+
+/* ============================================================
+   PAUSE + SETTINGS
+   ============================================================ */
+const pauseEl    = document.getElementById('pauseMenu');
+const settingsEl = document.getElementById('settingsMenu');
+const pauseBtn   = document.getElementById('pauseBtn');
+const musicTog   = document.getElementById('musicToggle');
+const sfxTog     = document.getElementById('sfxToggle');
+
+function syncToggles(){
+  musicTog.dataset.on = SETTINGS.music ? '1' : '0';
+  sfxTog.dataset.on   = SETTINGS.sfx   ? '1' : '0';
+}
+syncToggles();
+
+function pauseGame(){
+  if(state!==S.race && state!==S.count) return;
+  pausedFrom = state;
+  state = S.pause;
+  T.thr = 0; T.steer = 0;
+  pauseEl.classList.remove('hidden');
+  document.body.classList.remove('racing');
+  touch.classList.remove('on');
+}
+function resumeGame(){
+  if(state!==S.pause) return;
+  state = pausedFrom || S.race;
+  pausedFrom = null;
+  pauseEl.classList.add('hidden');
+  settingsEl.classList.add('hidden');
+  document.body.classList.add('racing');
+  touch.classList.toggle('on', isTouch);
+}
+function exitToMenu(){
+  state = S.menu;
+  pausedFrom = null;
+  pauseEl.classList.add('hidden');
+  settingsEl.classList.add('hidden');
+  resultsEl.classList.add('hidden');
+  menuEl.classList.remove('hidden');
+  hud.classList.remove('on');
+  document.body.classList.remove('racing');
+  touch.classList.remove('on');
+  refreshRecords();
+}
+
+let settingsReturn = null;
+function openSettings(from){
+  settingsReturn = from || null;
+  syncToggles();
+  settingsEl.classList.remove('hidden');
+}
+function closeSettings(){
+  settingsEl.classList.add('hidden');
+  if(settingsReturn === 'pause') pauseEl.classList.remove('hidden');
+  settingsReturn = null;
+}
+
+pauseBtn.onclick  = pauseGame;
+document.getElementById('resumeBtn').onclick        = resumeGame;
+document.getElementById('exitBtn').onclick          = exitToMenu;
+document.getElementById('pauseSettingsBtn').onclick = () => {
+  pauseEl.classList.add('hidden');
+  openSettings('pause');
+};
+document.getElementById('homeSettings').onclick = () => openSettings('menu');
+document.getElementById('settingsDone').onclick = closeSettings;
+
+musicTog.onclick = () => { SETTINGS.music = !SETTINGS.music; syncToggles(); saveSettings(); };
+sfxTog.onclick   = () => { SETTINGS.sfx   = !SETTINGS.sfx;   syncToggles(); saveSettings(); };
 
 /* ============================================================
    LOOP
@@ -2236,7 +2416,9 @@ let last = performance.now();
 function loop(now){
   const dt = Math.min((now-last)/1000, 1/30);
   last = now;
-  if(state!==S.menu) update(dt);
+  if(state===S.pause){
+    /* frozen frame, ambient audio only */
+  } else if(state!==S.menu) update(dt);
   else { cam.x += Math.cos(now/9000)*0.35; cam.y += Math.sin(now/7000)*0.3; stepFauna(dt); stepMoored(dt); stepWake(dt); }
   render(dt);
   if(state!==S.menu) drawHUD();
@@ -2249,6 +2431,7 @@ requestAnimationFrame(loop);
 window.__tr = { get boats(){return boats}, get fauna(){return FAUNA},
                 get boosts(){return boosts}, get state(){return state},
                 get track(){return track}, get moored(){return MOORED},
+                get T(){return T}, get settings(){return SETTINGS},
                 inside(x,y){return insideTrack(x,y)},
                 pick(i){ courseIdx=i; plotFit=null; track=TRACKS[i]; track._path=null;
                          spawnFauna(); spawnBoosts(); spawnMoored(); } };
