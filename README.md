@@ -91,7 +91,7 @@ fonts and plays normally.
 
 ## Building the apps
 
-Capacitor is configured in `capacitor.config.json` (`com.foghorn.tiderunner`, web assets in
+Capacitor is configured in `capacitor.config.json` (`com.politecarrot.tiderunner`, web assets in
 `docs/`). The native projects are checked in under `android/` and `ios/`.
 
 ```bash

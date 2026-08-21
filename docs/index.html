@@ -659,12 +659,11 @@
       .boot-lockup {
         display: grid;
         justify-items: center;
-        gap: clamp(10px, 3vh, 28px);
         width: min(68vw, 52vh, 360px);
       }
       .boot-mark {
         display: block;
-        width: 100%;
+        width: 78%;
         height: auto;
         opacity: 0;
         transform: scale(0.94);
@@ -672,11 +671,12 @@
       }
       .boot-name {
         display: block;
-        width: 82%;
+        width: 100%;
         height: auto;
+        margin-top: 12px;
         opacity: 0;
         transform: translateY(8px);
-        animation: boot-name 0.55s ease 1.05s forwards;
+        animation: boot-name 0.55s ease 0.72s forwards;
       }
       @keyframes boot-logo {
         to {
@@ -943,8 +943,8 @@
   <body>
     <div id="boot" aria-hidden="true">
       <div class="boot-lockup">
-        <img class="boot-mark" src="fog-horn-mark.svg" alt="" />
-        <img class="boot-name" src="fog-horn-name.svg" alt="" />
+        <img class="boot-mark" src="polite-carrot-logo.svg" alt="" />
+        <img class="boot-name" src="polite-carrot-name.svg" alt="" />
       </div>
     </div>
 

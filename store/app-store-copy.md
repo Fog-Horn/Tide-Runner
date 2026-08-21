@@ -75,19 +75,19 @@ _Character count: 90_
 ## Support URL
 
 ```
-https://fog-horn.github.io/Tide-Runner/
+https://polite-carrot.github.io/Tide-Runner/
 ```
 
 ## Marketing URL
 
 ```
-https://fog-horn.github.io/Tide-Runner/
+https://polite-carrot.github.io/Tide-Runner/
 ```
 
 ## Privacy Policy URL
 
 ```
-https://fog-horn.github.io/Tide-Runner/privacy.html
+https://polite-carrot.github.io/Tide-Runner/privacy.html
 ```
 
 ---
@@ -115,10 +115,10 @@ Result: **9+** (or 4+ if you leave the shark blank).
 © 2026 [Your Legal Name]
 ```
 
-Once Fog Horn Ltd exists and the app transfers:
+Once Polite Carrot Ltd exists and the app transfers:
 
 ```
-© 2026 Fog Horn Ltd
+© 2026 Polite Carrot Ltd
 ```
 
 ---
