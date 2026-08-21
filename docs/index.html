@@ -1711,12 +1711,18 @@ let boosts = [];
 function spawnBoosts(){
   boosts = [];
   const step = Math.max(6, Math.round(560/track.spacing));
+  const CLEAR = 60;   // keep boosts clear of any boat's grid slot
   let k = 0;
   for(let i=Math.round(360/track.spacing); i<track.n-4; i+=step){
     const lane = [(-0.46),(0.46),(0),(0.46),(-0.46)][k%5];
     const p=track.pts[i], nv=track.nrm[i];
-    boosts.push({x:p.x+nv.x*lane*track.half, y:p.y+nv.y*lane*track.half,
-                 i, lane, cool:0, spin:Math.random()*7});
+    const x = p.x+nv.x*lane*track.half, y = p.y+nv.y*lane*track.half;
+    let onGrid = false;
+    for(const b of boats){
+      if((b.x-x)**2 + (b.y-y)**2 < CLEAR*CLEAR){ onGrid = true; break; }
+    }
+    if(onGrid){ k++; continue; }
+    boosts.push({x, y, i, lane, cool:0, spin:Math.random()*7});
     k++;
   }
 }
