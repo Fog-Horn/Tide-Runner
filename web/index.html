@@ -4,9 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>Tiderunner — buoy racing</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --abyss:#04141c;
@@ -335,8 +332,8 @@
 
 <div id="hud">
   <div class="hud-tl">
-    <div class="stat panel"><span class="eyebrow">Lap</span><b class="num" id="lap">1<small>/3</small></b></div>
-    <div class="stat panel"><span class="eyebrow">Place</span><b class="num" id="pos">4<small>/4</small></b></div>
+    <div class="stat panel"><span class="eyebrow">Lap</span><b class="num"><span id="lap">1</span><small>/<span id="lapMax">3</span></small></b></div>
+    <div class="stat panel"><span class="eyebrow">Place</span><b class="num"><span id="pos">4</span><small>/<span id="posMax">4</span></small></b></div>
     <div class="stat panel speed">
       <span class="eyebrow">Speed</span>
       <div class="kn"><b class="num" id="kn">0</b><span>KM</span></div>
@@ -655,7 +652,6 @@ function ensureRec(name){
 }
 function bestLapFor(name){ const r = records[name]; return r && typeof r.lap === 'number' ? r.lap : 0; }
 function bestTotalFor(name, laps){ const r = records[name]; return r && r.totals && typeof r.totals[laps] === 'number' ? r.totals[laps] : 0; }
-const recordFor = name => bestLapFor(name);
 function setLapRecord(name, t){
   const r = ensureRec(name);
   if(!(t > 0) || (r.lap && t >= r.lap)) return false;
@@ -966,7 +962,7 @@ function initAudio(){
 
   AUD = { master, musicGain, sfxGain,
           engine:{ sub, hum, lfo, lfoGain, filt, g, nFilt, nGain },
-          lastBeep:99, musicOn:false };
+          lastBeep:99, musicOn:false, sfxOn: SETTINGS.sfx };
 }
 
 function stepAudio(){
@@ -975,7 +971,6 @@ function stepAudio(){
   const e = AUD.engine, t = AC.currentTime, tc = 0.08;
   const spd = Math.hypot(me.vx, me.vy);
   const boosted = me.boost>0, eaten = me.eaten>0;
-  const idle = state === S.count;
   const running = state === S.race || state === S.count;
   const thr = running ? Math.min(1, spd/TOP + (boosted?0.15:0)) : 0;
 
@@ -991,7 +986,10 @@ function stepAudio(){
             : 0;
   e.g.gain.setTargetAtTime(vol, t, 0.22);
 
-  AUD.sfxGain.gain.setTargetAtTime(SETTINGS.sfx ? 1 : 0, t, 0.06);
+  if(AUD.sfxOn !== SETTINGS.sfx){
+    AUD.sfxGain.gain.setTargetAtTime(SETTINGS.sfx ? 1 : 0, t, 0.06);
+    AUD.sfxOn = SETTINGS.sfx;
+  }
 
   if(state===S.count){
     const v = Math.ceil(countT-1);
@@ -1124,7 +1122,7 @@ const EAT_AT = 5.5;         // hard backstop if the shark can't reach you
 function nearestIdx(b){
   const n=track.n, pts=track.pts;
   let best=b.idx, bd=Infinity;
-  for(let k=-60;k<=60;k++){
+  for(let k=-10;k<=10;k++){
     const i=((b.idx+k)%n+n)%n, p=pts[i];
     const d=(p.x-b.x)**2+(p.y-b.y)**2;
     if(d<bd){bd=d;best=i;}
@@ -2112,7 +2110,7 @@ function render(dt){
   }
 
   // boats, hindmost first
-  for(const b of ranked().slice().reverse()) drawBoat(b);
+  for(let i=frameRanked.length-1;i>=0;i--) drawBoat(frameRanked[i]);
 
   // a shark mid-attack goes over the top of the hull it's taking
   for(const c of FAUNA) if(c.hunt||c.feed>0) drawCreature(c);
@@ -2181,47 +2179,56 @@ function drawBoat(b){
    CHARTPLOTTER
    ============================================================ */
 const plot = document.getElementById('plot'), pctx = plot.getContext('2d');
-let plotFit = null;
+let plotFit = null, plotCache = null;
 function fitPlot(){
   const bd = track.bounds, pad = 12, size = plot.width;
   const s = Math.min((size-pad*2)/(bd.maxx-bd.minx), (size-pad*2)/(bd.maxy-bd.miny));
   plotFit = {s, ox:(size-(bd.maxx-bd.minx)*s)/2 - bd.minx*s, oy:(size-(bd.maxy-bd.miny)*s)/2 - bd.miny*s};
+  plotCache = null;
+}
+function buildPlotCache(){
+  const c = document.createElement('canvas');
+  c.width = plot.width; c.height = plot.height;
+  const g = c.getContext('2d');
+  const f = plotFit, X = p => p.x*f.s+f.ox, Y = p => p.y*f.s+f.oy;
+  g.strokeStyle='rgba(127,233,216,.07)'; g.lineWidth=1;
+  for(let i=0;i<=4;i++){
+    const q = i*plot.width/4;
+    g.beginPath(); g.moveTo(q,0); g.lineTo(q,plot.height);
+    g.moveTo(0,q); g.lineTo(plot.width,q); g.stroke();
+  }
+  g.lineJoin = g.lineCap = 'round';
+  g.beginPath(); g.moveTo(X(track.pts[0]), Y(track.pts[0]));
+  for(let i=1;i<track.n;i++) g.lineTo(X(track.pts[i]), Y(track.pts[i]));
+  g.closePath();
+  g.strokeStyle='rgba(12,66,87,.95)'; g.lineWidth=track.width*f.s; g.stroke();
+  g.strokeStyle='rgba(127,233,216,.16)'; g.lineWidth=1.4; g.stroke();
+  const sp = track.pts[0], sn = track.nrm[0];
+  g.strokeStyle='rgba(234,247,244,.6)'; g.lineWidth=1.6;
+  g.beginPath();
+  g.moveTo((sp.x-sn.x*track.half)*f.s+f.ox,(sp.y-sn.y*track.half)*f.s+f.oy);
+  g.lineTo((sp.x+sn.x*track.half)*f.s+f.ox,(sp.y+sn.y*track.half)*f.s+f.oy);
+  g.stroke();
+  plotCache = c;
 }
 function drawPlot(){
   if(!plotFit) fitPlot();
-  const f=plotFit, X=p=>p.x*f.s+f.ox, Y=p=>p.y*f.s+f.oy;
+  if(!plotCache) buildPlotCache();
+  const f = plotFit, X = p => p.x*f.s+f.ox, Y = p => p.y*f.s+f.oy;
   pctx.clearRect(0,0,plot.width,plot.height);
+  pctx.drawImage(plotCache, 0, 0);
 
-  pctx.strokeStyle='rgba(127,233,216,.07)'; pctx.lineWidth=1;
-  for(let g=0;g<=4;g++){const q=g*plot.width/4;
-    pctx.beginPath();pctx.moveTo(q,0);pctx.lineTo(q,plot.height);pctx.moveTo(0,q);pctx.lineTo(plot.width,q);pctx.stroke();}
-
-  pctx.lineJoin=pctx.lineCap='round';
-  pctx.beginPath(); pctx.moveTo(X(track.pts[0]),Y(track.pts[0]));
-  for(let i=1;i<track.n;i++) pctx.lineTo(X(track.pts[i]),Y(track.pts[i]));
-  pctx.closePath();
-  pctx.strokeStyle='rgba(12,66,87,.95)'; pctx.lineWidth=track.width*f.s; pctx.stroke();
-  pctx.strokeStyle='rgba(127,233,216,.16)'; pctx.lineWidth=1.4; pctx.stroke();
-
-  // sailed track — the breadcrumb
   if(trail.length>1){
     for(let i=1;i<trail.length;i++){
-      const a=i/trail.length;
+      const a = i/trail.length;
       pctx.strokeStyle='rgba(127,233,216,'+(0.10+a*0.85)+')';
-      pctx.lineWidth=1.2+a*1.9;
+      pctx.lineWidth = 1.2+a*1.9;
       pctx.beginPath(); pctx.moveTo(X(trail[i-1]),Y(trail[i-1])); pctx.lineTo(X(trail[i]),Y(trail[i])); pctx.stroke();
     }
   }
-  // start line
-  const sp=track.pts[0], sn=track.nrm[0];
-  pctx.strokeStyle='rgba(234,247,244,.6)'; pctx.lineWidth=1.6;
-  pctx.beginPath();
-  pctx.moveTo((sp.x-sn.x*track.half)*f.s+f.ox,(sp.y-sn.y*track.half)*f.s+f.oy);
-  pctx.lineTo((sp.x+sn.x*track.half)*f.s+f.ox,(sp.y+sn.y*track.half)*f.s+f.oy);
-  pctx.stroke();
 
   for(const b of boats){
-    pctx.fillStyle=b.col;
+    pctx.fillStyle = b.col;
     pctx.beginPath(); pctx.arc(X(b),Y(b), b===me?5:3.6, 0,7); pctx.fill();
     if(b===me){ pctx.strokeStyle='rgba(4,20,28,.9)'; pctx.lineWidth=1.6; pctx.stroke(); }
   }
@@ -2231,7 +2238,8 @@ function drawPlot(){
    HUD
    ============================================================ */
 const hud=document.getElementById('hud'), cdEl=document.getElementById('countdown');
-const lapEl=document.getElementById('lap'), posEl=document.getElementById('pos');
+const lapEl=document.getElementById('lap'), lapMaxEl=document.getElementById('lapMax');
+const posEl=document.getElementById('pos'), posMaxEl=document.getElementById('posMax');
 const clockEl=document.getElementById('clock'), lastEl=document.getElementById('last'), bestEl=document.getElementById('best');
 const knEl=document.getElementById('kn'), barEl=document.getElementById('bar'), warnEl=document.getElementById('warn');
 const draftEl=document.getElementById('draft'), recEl=document.getElementById('rec');
@@ -2243,13 +2251,15 @@ function fmt(t){
   return m + ':' + (s<10?'0':'') + s.toFixed(1);
 }
 function drawHUD(){
-  const r = ranked(), place = r.indexOf(me)+1;
-  lapEl.innerHTML = Math.min(Math.max(me.lap+1,1), totalLaps) + '<small>/' + totalLaps + '</small>';
-  posEl.innerHTML = place + '<small>/' + boats.length + '</small>';
+  const place = frameRanked.indexOf(me)+1;
+  lapEl.textContent = Math.min(Math.max(me.lap+1,1), totalLaps);
+  lapMaxEl.textContent = totalLaps;
+  posEl.textContent = place;
+  posMaxEl.textContent = boats.length;
   clockEl.textContent = fmt(raceT) === '—' ? '0:00.0' : fmt(raceT);
   lastEl.textContent = fmt(me.lastLap);
   bestEl.textContent = fmt(me.bestLap);
-  recEl.textContent = fmt(recordFor(track.name));
+  recEl.textContent = fmt(bestLapFor(track.name));
   const spd = Math.hypot(me.vx,me.vy);
   knEl.textContent = Math.round(spd*0.26);
   barEl.firstElementChild.style.width = Math.min(100, spd/TOP*100) + '%';
@@ -2280,7 +2290,7 @@ function ordinal(k){
 
 function finish(){
   state = S.done;
-  const r = ranked(), place = r.indexOf(me)+1;
+  const r = frameRanked, place = r.indexOf(me)+1;
   rTitle.textContent = place===1 ? 'Won it' : ordinal(place);
   const tail = place===1 ? 'Clean water all the way home.' : 'The leader is still out there somewhere.';
   const bits = ['your best lap ' + fmt(me.bestLap)];
@@ -2495,6 +2505,7 @@ boats=[me]; cam.x=me.x; cam.y=me.y; cam.s=1;
 spawnFauna(); spawnBoosts();
 
 let last = performance.now();
+let frameRanked = [];
 function loop(now){
   const dt = Math.min((now-last)/1000, 1/30);
   last = now;
@@ -2502,21 +2513,13 @@ function loop(now){
     /* frozen frame, ambient audio only */
   } else if(state!==S.menu) update(dt);
   else { cam.x += Math.cos(now/9000)*0.35; cam.y += Math.sin(now/7000)*0.3; stepFauna(dt); stepMoored(dt); stepWake(dt); }
+  frameRanked = ranked();
   render(dt);
   if(state!==S.menu) drawHUD();
   stepAudio();
   requestAnimationFrame(loop);
 }
 requestAnimationFrame(loop);
-
-// small handle so the game can be driven headlessly in tests
-window.__tr = { get boats(){return boats}, get fauna(){return FAUNA},
-                get boosts(){return boosts}, get state(){return state},
-                get track(){return track}, get moored(){return MOORED},
-                get T(){return T}, get settings(){return SETTINGS},
-                inside(x,y){return insideTrack(x,y)},
-                pick(i){ courseIdx=i; plotFit=null; track=TRACKS[i]; track._path=null;
-                         spawnFauna(); spawnBoosts(); spawnMoored(); } };
 
 })();
 </script>
