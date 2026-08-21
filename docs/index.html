@@ -126,7 +126,8 @@
   /* ---------- screens ---------- */
   .screen{
     position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    padding:20px;background:radial-gradient(120% 90% at 50% 0%,rgba(12,66,87,.55),rgba(4,20,28,.94));
+    padding:calc(20px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) calc(20px + env(safe-area-inset-bottom)) calc(20px + env(safe-area-inset-left));
+    background:radial-gradient(120% 90% at 50% 0%,rgba(12,66,87,.55),rgba(4,20,28,.94));
     z-index:5;
   }
   .screen.hidden{display:none}
